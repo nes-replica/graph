@@ -1,0 +1,13 @@
+.markdown-editor-modal-container {
+    height: 100%;
+}
+
+.markdown-editor-modal-container > .editor {
+    height: 90%;
+}
+
+.markdown-editor-modal-container > .actions {
+    display: flex;
+    height: 10%;
+    justify-content: right;
+}
