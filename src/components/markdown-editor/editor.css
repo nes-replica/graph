@@ -1,0 +1,24 @@
+.markdown-editor-container {
+    display: flex;
+    border: 1px solid purple;
+    height: 100%;
+}
+
+.markdown-editor-container .source-editor {
+    flex: 50%;
+    border: 1px solid aquamarine;
+}
+
+.markdown-editor-container .source-editor textarea {
+    width: 100%;
+    box-sizing: border-box;
+    height: 100%;
+    padding: 0.5em;
+}
+
+.markdown-editor-container .preview {
+    flex: 50%;
+    border: 1px solid darkorange;
+    overflow: auto;
+    padding: 0.5em;
+}
