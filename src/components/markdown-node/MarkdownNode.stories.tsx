@@ -3,6 +3,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import {MarkdownNode} from "./MarkdownNode";
+import { ReactFlowProvider } from 'react-flow-renderer';
 
 export default {
   /* 👇 The title prop is optional.
@@ -14,7 +15,10 @@ export default {
   decorators: [
     (Story) => (
       <div style={{ position: 'absolute' }}>
-        <Story />
+
+        <ReactFlowProvider>
+          <Story />
+        </ReactFlowProvider>
       </div>
     ),
   ],

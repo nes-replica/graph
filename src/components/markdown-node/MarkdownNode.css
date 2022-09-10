@@ -5,6 +5,10 @@
     padding-right: 40px;
 }
 
+.selected .markdown-node-container {
+    border: 3px solid deeppink;
+}
+
 .markdown-node-container .collapse-button {
     position: absolute;
     bottom: 0;

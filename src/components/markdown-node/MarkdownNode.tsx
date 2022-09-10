@@ -2,6 +2,7 @@ import {NodeProps} from "react-flow-renderer/dist/esm/types/nodes";
 import {Markdown} from "../markdown/Markdown";
 import './MarkdownNode.css';
 import {useState} from "react";
+import {Handle, Position} from "react-flow-renderer";
 
 export interface MarkdownData {
   content: string;
@@ -17,7 +18,7 @@ export function MarkdownNode({data: {content}}: Pick<NodeProps<MarkdownData>, 'd
 
   return (
     <>
-      {/*<Handle type="target" position={Position.Top} />*/}
+      <Handle type="target" id="target1" position={Position.Top} />
       <div className={'markdown-node-container'}>
         <Markdown content={isExpanded ? trimmedContent : shortContent}></Markdown>
         {
@@ -28,8 +29,7 @@ export function MarkdownNode({data: {content}}: Pick<NodeProps<MarkdownData>, 'd
           )
         }
       </div>
-      {/*<Handle type="source" position={Position.Bottom} id="a" />*/}
-      {/*<Handle type="source" position={Position.Bottom} id="b" style={handleStyle} />*/}
+      <Handle type="source" id="source1" position={Position.Bottom} />
     </>
   );
 }
