@@ -1,44 +1,20 @@
 import ReactFlow, {
-  MiniMap,
+  ConnectionMode,
   Controls,
+  MiniMap,
   Node,
-  Edge, useReactFlow, ReactFlowProvider
+  ReactFlowProvider,
+  useReactFlow
 } from 'react-flow-renderer';
 import {MouseEvent as ReactMouseEvent, useReducer, useRef, useState} from "react";
 import {MarkdownData, MarkdownNode} from "../markdown-node/MarkdownNode";
 import {MarkdownEditorModal} from "../markdown-editor/MarkdownEditorModal";
 import {graphStateReduce} from "./graphState";
+import {sampleGraph} from "./sampleData";
 
 const nodeTypes = {
   markdown: MarkdownNode,
 }
-
-const initialNodes: Node<MarkdownData>[] = [
-  {
-    id: '1',
-    type: 'markdown',
-    data: { content: 'Input _Node_' },
-    position: { x: 250, y: 25 },
-  },
-
-  {
-    id: '2',
-    type: 'markdown',
-    data: { content: "Other no2de" },
-    position: { x: 100, y: 125 },
-  },
-
-  {
-    id: '3',
-    type: 'markdown',
-    data: { content: "NODE 3" },
-    position: { x: 300, y: 75 },
-  }
-];
-
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2', sourceHandle: 'source1', targetHandle: 'target1'},
-];
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -49,8 +25,7 @@ function InternalGraph() {
   const { project } = useReactFlow();
 
   const [graph, dispatchGraphAction] = useReducer(graphStateReduce, {
-    nodes: initialNodes,
-    edges: initialEdges,
+    ...sampleGraph,
     draggingEdgeNow: false,
   })
 
@@ -106,6 +81,7 @@ function InternalGraph() {
           }
         }}
         deleteKeyCode={'Delete'}
+        connectionMode={ConnectionMode.Loose}
       >
         <MiniMap />
         <Controls />

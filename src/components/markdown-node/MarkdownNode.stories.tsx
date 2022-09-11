@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
@@ -29,7 +29,7 @@ export const ShortText: ComponentStory<typeof MarkdownNode> = () => {
   let content = `
 [PPU](https://google.com/?q=ppu)
 `;
-  return <MarkdownNode data={{content: content}}></MarkdownNode>;
+  return <MarkdownNode id='1' data={{content: content}}></MarkdownNode>;
 }
 
 
@@ -40,5 +40,5 @@ PPU
 
 PPU (Picture-processing unit) responds for rendering video signal
 `;
-  return <MarkdownNode data={{content: content}}></MarkdownNode>;
+  return <MarkdownNode id='1' data={{content: content}}></MarkdownNode>;
 }
