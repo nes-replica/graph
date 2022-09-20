@@ -7,7 +7,7 @@ import {
   EdgeChange,
   Node, updateEdge, XYPosition
 } from "react-flow-renderer";
-import {MarkdownData} from "../markdown-node/MarkdownNode";
+import {ConnectionPosition, MarkdownData, parsePipka} from "../markdown-node/MarkdownNode";
 import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 
 export interface GraphState {
@@ -35,6 +35,8 @@ interface RFEdgeChange {
 interface RFConnect {
   type: 'rfConnect'
   connection: Connection
+  newSourceHandle: string
+  newTargetHandle: string
 }
 
 interface RFEdgeUpdate {
@@ -64,6 +66,31 @@ interface CreateNode {
 
 export type GraphStateAction = UpdateNodeData | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart | RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode;
 
+interface NewConnectionProps {
+  isBefore: boolean
+  position: ConnectionPosition
+}
+
+function getNewConnection(handle: string | null): NewConnectionProps | null {
+  if (handle == null) {
+    console.warn("handle for new connection is null")
+    return {
+      isBefore: true,
+      position: "top",
+    }
+  } else {
+    const newPipkaInfo = parsePipka(handle);
+    if (newPipkaInfo) {
+      return {
+        isBefore: newPipkaInfo.isBefore,
+        position: newPipkaInfo.position,
+      }
+    } else {
+      return null;
+    }
+  }
+}
+
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
   switch (action.type) {
     case 'update':
@@ -74,7 +101,40 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
     case 'rfEdgeChange':
       return {...state, edges: applyEdgeChanges(action.changes, state.edges)};
     case 'rfConnect':
-      return {...state, edges: addEdge(action.connection, state.edges)};
+      const newSourceHandle = getNewConnection(action.connection.sourceHandle);
+      const newTargetHandle = getNewConnection(action.connection.targetHandle);
+      const newConnection = {
+        ...action.connection,
+        sourceHandle: newSourceHandle ? action.newSourceHandle : action.connection.sourceHandle,
+        targetHandle: newTargetHandle ? action.newTargetHandle : action.connection.targetHandle,
+      }
+      const nodes2 = state.nodes.map(node => {
+        if (node.id === action.connection.source || node.id === action.connection.target) {
+          let newConnections = node.data.connections || [];
+          if (node.id === action.connection.source && newSourceHandle) {
+            newConnections =
+              newSourceHandle.isBefore
+                ? [{id: action.newSourceHandle, position: newSourceHandle.position}, ...newConnections]
+                : [...newConnections, {id: action.newSourceHandle, position: newSourceHandle.position}];
+          }
+          if (node.id === action.connection.target && newTargetHandle) {
+            newConnections =
+              newTargetHandle.isBefore
+                ? [{id: action.newTargetHandle, position: newTargetHandle.position}, ...newConnections]
+                : [...newConnections, {id: action.newTargetHandle, position: newTargetHandle.position}];
+          }
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              connections: newConnections
+            }
+          }
+        }
+        return node;
+      });
+      console.log('rfConnect', action, state.nodes, nodes2);
+      return {...state, nodes: nodes2, edges: addEdge(newConnection, state.edges)};
     case 'rfEdgeUpdateStart':
       return {...state, draggingEdgeNow: true};
     case 'rfEdgeUpdate':

@@ -4,7 +4,7 @@ import ReactFlow, {
   MiniMap,
   Node,
   ReactFlowProvider,
-  useReactFlow
+  useReactFlow, useUpdateNodeInternals
 } from 'react-flow-renderer';
 import {MouseEvent as ReactMouseEvent, useReducer, useRef, useState} from "react";
 import {MarkdownData, MarkdownNode} from "../markdown-node/MarkdownNode";
@@ -61,7 +61,9 @@ function InternalGraph() {
         onSelectCapture={console.log}
         onNodesChange={changes => dispatchGraphAction({type: 'rfNodeChange', changes})}
         onEdgesChange={changes => dispatchGraphAction({type: 'rfEdgeChange', changes})}
-        onConnect={connection => dispatchGraphAction({type: 'rfConnect', connection})}
+        onConnect={connection => {
+          dispatchGraphAction({type: 'rfConnect', connection, newSourceHandle: Math.random().toString(), newTargetHandle: Math.random().toString()});
+        }}
         onEdgeUpdateStart={() => dispatchGraphAction({type: 'rfEdgeUpdateStart'})}
         onEdgeUpdate={(oldEdge, newConnection) => dispatchGraphAction({type: 'rfEdgeUpdate', oldEdge, newConnection})}
         onEdgeUpdateEnd={(_, edge) => dispatchGraphAction({type: 'rfEdgeUpdateEnd', edge})}
