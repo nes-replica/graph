@@ -4,13 +4,13 @@ import ReactFlow, {
   MiniMap,
   Node,
   ReactFlowProvider,
-  useReactFlow, useUpdateNodeInternals
+  useReactFlow
 } from 'react-flow-renderer';
-import {MouseEvent as ReactMouseEvent, useReducer, useRef, useState} from "react";
+import {MouseEvent as ReactMouseEvent, useEffect, useReducer, useRef, useState} from "react";
 import {MarkdownData, MarkdownNode} from "../markdown-node/MarkdownNode";
 import {MarkdownEditorModal} from "../markdown-editor/MarkdownEditorModal";
 import {graphStateReduce} from "./graphState";
-import {sampleGraph} from "./sampleData";
+import {GraphStorage} from "./graphStorage";
 
 const nodeTypes = {
   markdown: MarkdownNode,
@@ -20,14 +20,34 @@ interface MdNodeEditorState {
   node?: Node<MarkdownData>;
 }
 
-function InternalGraph() {
+function InternalGraph({graphStorage}: GraphProps) {
   const reactFlowRef = useRef<HTMLDivElement>(null);
   const { project } = useReactFlow();
 
   const [graph, dispatchGraphAction] = useReducer(graphStateReduce, {
-    ...sampleGraph,
+    nodes: [],
+    edges: [],
     draggingEdgeNow: false,
+    isLoaded: false,
   })
+
+  useEffect(() => {
+    graphStorage.get()
+      .then(graph => {
+        console.log("got from storage", graph);
+        dispatchGraphAction({ type: 'loadingSucceed', graph: graph });
+      })
+  }, [graphStorage]);
+
+
+  useEffect(() => {
+    if (graph.isLoaded) {
+      graphStorage.save(graph).then(() => {
+        console.log("saved to storage", graph);
+      }, console.error);
+    }
+  }, [graph,  graphStorage]);
+
 
   const [mdEditor, setMdEditor] = useState<MdNodeEditorState>({});
 
@@ -97,8 +117,12 @@ function InternalGraph() {
   );
 }
 
-export function Graph() {
+export interface GraphProps {
+  graphStorage: GraphStorage
+}
+
+export function Graph({graphStorage}: GraphProps) {
   return <ReactFlowProvider>
-    <InternalGraph />
+    <InternalGraph graphStorage={graphStorage} />
   </ReactFlowProvider>
 }

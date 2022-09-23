@@ -102,9 +102,6 @@ export function MarkdownNode({id, data: {content, connections}}: Pick<NodeProps<
   return (
     <>
       <div className={'markdown-node-container'}>
-        <>
-          {connections?.length}
-        </>
         <Markdown content={isExpanded ? trimmedContent : shortContent}></Markdown>
         {
           alwaysExpanded ? null : (
@@ -114,9 +111,10 @@ export function MarkdownNode({id, data: {content, connections}}: Pick<NodeProps<
           )
         }
       </div>
-      {
-        AllPositions.map(p => renderConnectionsRow(connections || [], p))
-      }
+      {renderConnectionsRow(connections || [], 'top')}
+      {renderConnectionsRow(connections || [], 'bottom')}
+      {renderConnectionsRow(connections || [], 'left')}
+      {renderConnectionsRow(connections || [], 'right')}
     </>
   );
 }

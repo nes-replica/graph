@@ -9,11 +9,14 @@ import {
 } from "react-flow-renderer";
 import {ConnectionPosition, MarkdownData, parsePipka} from "../markdown-node/MarkdownNode";
 import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
+import {Graph} from "./graphStorage";
 
 export interface GraphState {
   nodes: Node<MarkdownData>[];
   edges: Edge[];
   draggingEdgeNow: boolean;
+  isLoaded: boolean;
+  loadingError?: string;
 }
 
 interface UpdateNodeData {
@@ -64,7 +67,19 @@ interface CreateNode {
   position: XYPosition
 }
 
-export type GraphStateAction = UpdateNodeData | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart | RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode;
+interface LoadingSucceed {
+  type: 'loadingSucceed'
+  graph: Graph
+}
+
+interface LoadingFailed {
+  type: 'loadingFailed'
+  error: string
+}
+
+export type GraphStateAction =
+  UpdateNodeData | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart |
+  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed;
 
 interface NewConnectionProps {
   isBefore: boolean
@@ -93,8 +108,15 @@ function getNewConnection(handle: string | null): NewConnectionProps | null {
 
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
   switch (action.type) {
+    case 'loadingSucceed':
+      return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true};
+    case 'loadingFailed':
+      return {...state, isLoaded: true, loadingError: action.error};
     case 'update':
-      const nodes = state.nodes.map(node => (node.id === action.nodeId) ? {...node, data: action.newData} : node);
+      const nodes = state.nodes.map(node =>
+        (node.id === action.nodeId)
+          ? {...node, data: {...node.data, ...action.newData}}
+          : node);
       return {...state, nodes };
     case 'rfNodeChange':
       return {...state, nodes: applyNodeChanges(action.changes, state.nodes)};
