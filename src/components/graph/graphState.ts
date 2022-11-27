@@ -14,6 +14,9 @@ import {Graph} from "./graphStorage";
 export interface GraphState {
   nodes: Node<MarkdownData>[];
   edges: Edge[];
+  uploadingParams?: {
+    position: XYPosition
+  }
   draggingEdgeNow: boolean;
   isLoaded: boolean;
   loadingError?: string;
@@ -22,7 +25,7 @@ export interface GraphState {
 interface UpdateNodeData {
   type: "update";
   nodeId: string;
-  newData: MarkdownData;
+  newData: any;
 }
 
 interface RFNodeChange {
@@ -63,6 +66,10 @@ interface RFPaneDoubleClick {
 interface CreateNode {
   type: 'createNode'
   position: XYPosition
+  node?: {
+    type: string,
+    data: any
+  }
 }
 
 interface LoadingSucceed {
@@ -75,9 +82,27 @@ interface LoadingFailed {
   error: string
 }
 
+interface PictureUploadStart {
+  type: 'pictureUploadStart'
+  position: XYPosition,
+}
+
+interface PictureUploadProgress {
+  type: 'pictureUploadProgress'
+}
+
+interface PictureUploadFinished {
+  type: 'pictureUploadFinished'
+  error?: Error
+  url?: string
+}
+
+export type PictureUploadAction = PictureUploadStart | PictureUploadProgress | PictureUploadFinished
+
 export type GraphStateAction =
   UpdateNodeData | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart |
-  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed;
+  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed |
+  PictureUploadAction;
 
 function isConnectionPosition(value: string): value is ConnectionPosition {
   return ['top', 'bottom', 'left', 'right'].includes(value);
@@ -188,14 +213,42 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       }
     case 'createNode':
       const newId = Math.random().toString();
-      return {
-        ...state, nodes: [...state.nodes, {
-          id: newId,
-          type: 'markdown',
-          position: action.position,
-          data: {content: '_double click me_', nodeHandles: INITIAL_HANDLES}
-        }]
+      return {...state, nodes: [...state.nodes, {
+        id: newId,
+        type: action.node?.type || 'markdown',
+        position: action.position,
+        data: action.node?.data || { content: '_double click me_', nodeHandles: INITIAL_HANDLES }
+      }]}
+    case "pictureUploadStart":
+      return {...state,
+        uploadingParams: {
+          position: action.position
+        }
+      };
+    case "pictureUploadFinished":
+      if (action.error) {
+        alert(`Uploading failed: ${action.error}`);
+        console.error("uploading failed", action.error);
+      } else if (action.url) {
+        if (state.uploadingParams) {
+          return graphStateReduce(state, {
+            type: 'createNode',
+            position: state.uploadingParams.position,
+            node: {
+              type: 'picture',
+              data: {
+                picture_url: action.url,
+                preview: {
+                  width: 300, height: 200,
+                }
+              }
+            }
+          })
+        }
+      } else {
+        console.error("invalid action: no error or url", action);
       }
+      return state;
     default:
       console.warn("Unexpected action for graph state", action, state);
       return state;
