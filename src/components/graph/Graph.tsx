@@ -3,21 +3,29 @@ import ReactFlow, {
   Controls,
   MiniMap,
   Node,
-  ReactFlowProvider,
+  ReactFlowProvider, useKeyPress,
   useReactFlow
 } from 'react-flow-renderer';
 import {
-  MouseEvent as ReactMouseEvent,
-  useCallback,
-  useEffect, useMemo,
+  KeyboardEventHandler,
+  MouseEvent as ReactMouseEvent, useCallback,
+  useEffect,
+  useMemo,
   useReducer,
   useRef,
   useState
 } from "react";
 import {MarkdownData, MarkdownNode} from "../markdown-node/MarkdownNode";
 import {MarkdownEditorModal} from "../markdown-editor/MarkdownEditorModal";
-import {graphStateReduce} from "./graphState";
+import {graphStateReduce, INITIAL_HANDLES} from "./graphState";
 import {GraphStorage} from "./graphStorage";
+import {
+  CommandNodeData,
+  CommandNodeInteraction,
+  CommandPromptNode,
+  CommandPromptNodeProps
+} from "../command-prompt/CommandPromptNode";
+import {NodeTypes} from "react-flow-renderer/dist/esm/types";
 import {OnNodeResize, PictureNode, PictureNodeProps} from "../picture/PictureNode";
 import {DropEvent, FileRejection, useDropzone} from 'react-dropzone';
 import {handleDropzoneFile} from "./dropzoneHandler";
@@ -115,12 +123,60 @@ function InternalGraph({graphStorage}: GraphProps) {
     return PictureNode({...props, onResize})
   }
 
-  const nodeTypes = useMemo(() => {
+  const callPromptPressed = useKeyPress("/");
+  useEffect(() => {
+    if (!reactFlowRef.current || !callPromptPressed) return;
+    const { height, width } = reactFlowRef.current.getBoundingClientRect();
+    dispatchGraphAction({
+      type: 'createNode',
+      position: project({ x: width/2, y: height/2 }),
+      newNode: {
+        type: 'commandPrompt',
+        data: {
+          command: ''
+        }
+      },
+      afterNewNode: (newId) => {
+        setActivePrompt(newId);
+      },
+    })
+  }, [project, reactFlowRef, callPromptPressed]);
+
+  const [activePrompt, setActivePrompt] = useState<string | undefined>();
+
+  const linkedCommandPromptNode = useCallback((props: CommandPromptNodeProps) => {
+    const interactionProps: CommandNodeInteraction = {
+      editMode: props.id === activePrompt,
+      onUpdate: newCommand => {
+        dispatchGraphAction({
+          type: "updateCb",
+          nodeId: props.id,
+          updateFunc: (data: CommandNodeData): CommandNodeData => {
+            return {...data, command: newCommand}
+          }
+        })
+        setActivePrompt(undefined);
+      },
+      onCancel: () => {
+        setActivePrompt(undefined);
+      },
+      onReload: () => {
+        console.log("RUN COMMAND", props.data.command)
+      },
+      onRequestToEdit: () => {
+        setActivePrompt(props.id);
+      },
+    }
+    return CommandPromptNode({...props, ...interactionProps})
+  }, [activePrompt, dispatchGraphAction])
+
+  const nodeTypes: NodeTypes = useMemo(() => {
     return {
       markdown: MarkdownNode,
+      commandPrompt: linkedCommandPromptNode,
       picture: PictureNodeResizable,
     }
-  }, [])
+  }, [linkedCommandPromptNode])
 
   return (
     <>
@@ -146,6 +202,10 @@ function InternalGraph({graphStorage}: GraphProps) {
               dispatchGraphAction({
                 type: 'createNode',
                 position: project({ x: event.clientX - left, y: event.clientY - top }),
+                newNode: {
+                  type: 'markdown',
+                  data: { content: '_double click me_', nodeHandles: INITIAL_HANDLES }
+                }
               })
             }
           }
