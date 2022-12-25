@@ -3,9 +3,12 @@ import {Markdown} from "../markdown/Markdown";
 import './MarkdownNode.css';
 import {useEffect, useState} from "react";
 import {Handle, Position, useUpdateNodeInternals} from "react-flow-renderer";
+import {ConnectionPosition, NodeHandle} from "../graph/graphState";
 
-export type ConnectionPosition = 'top' | 'bottom' | 'left' | 'right';
-const AllPositions: ConnectionPosition[] = ['top', 'left', 'right', 'bottom'];
+export interface MarkdownData {
+  content: string;
+  nodeHandles: NodeHandle[];
+}
 
 function toRFPosition(connPosition: ConnectionPosition) {
   switch (connPosition) {
@@ -14,16 +17,6 @@ function toRFPosition(connPosition: ConnectionPosition) {
     case "left": return Position.Left;
     case "right": return Position.Right;
   }
-}
-
-interface Connection {
-  id: string;
-  position: ConnectionPosition;
-}
-
-export interface MarkdownData {
-  content: string;
-  connections?: Connection[];
 }
 
 function handleStyle(i: number, total: number, position: ConnectionPosition) {
@@ -36,62 +29,47 @@ function handleStyle(i: number, total: number, position: ConnectionPosition) {
   }
 }
 
-export interface PipkaData {
-  position: ConnectionPosition
-  isBefore: boolean
+function makeHandle(id: string, position: ConnectionPosition, indexInRow: number, handlesInRowCount: number) {
+  return <Handle
+    key={id}
+    type="source"
+    id={id}
+    position={toRFPosition(position)}
+    className={'new-handle'}
+    style={handleStyle(indexInRow, handlesInRowCount, toRFPosition(position))}
+  />
 }
 
-function newPipkaId(position: ConnectionPosition, isBefore: boolean = true) {
-  return JSON.stringify({position, isBefore});
+function makeHandles(handles: NodeHandle[]) {
+  const topHandleRow = handles.filter(h => h.position === 'top');
+  const topHandleRowRendered = topHandleRow.map((handle, index) => {
+    return makeHandle(handle.id, handle.position, index, topHandleRow.length);
+  })
+
+  const bottomHandleRow = handles.filter(h => h.position === 'bottom');
+  const bottomHandleRowRendered = bottomHandleRow.map((handle, index) => {
+    return makeHandle(handle.id, handle.position, index, bottomHandleRow.length);
+  })
+
+  const leftHandleRow = handles.filter(h => h.position === 'left');
+  const leftHandleRowRendered = leftHandleRow.map((handle, index) => {
+    return makeHandle(handle.id, handle.position, index, leftHandleRow.length);
+  })
+
+  const rightHandleRow = handles.filter(h => h.position === 'right');
+  const rightHandleRowRendered = rightHandleRow.map((handle, index) => {
+    return makeHandle(handle.id, handle.position, index, rightHandleRow.length);
+  })
+
+  return [...topHandleRowRendered, ...bottomHandleRowRendered, ...leftHandleRowRendered, ...rightHandleRowRendered]
 }
 
-export function parsePipka(id: string): PipkaData | null {
-  try {
-    const res = JSON.parse(id);
-    if (Object.hasOwn(res, "position") && Object.hasOwn(res, "isBefore")) {
-      return res;
-    } else {
-      return null;
-    }
-  }
-  catch (e) {
-    return null;
-  }
-}
-
-function renderConnectionsRow(conns: Connection[], position: ConnectionPosition): JSX.Element | JSX.Element[] {
-  const desiredConns = conns.filter(c => c.position === position);
-  const pos = toRFPosition(position)
-
-  if (desiredConns.length === 0) {
-    return <Handle
-      key={newPipkaId(position)}
-      type="source" id={newPipkaId(position)} position={pos}
-      className={'new-handle'}
-      style={handleStyle(0, 1, position)}/>
-  } else {
-    const handlesCnt = desiredConns.length + 2;
-    return <>
-      <Handle key={newPipkaId(position, true)} type="source" id={newPipkaId(position, true)} position={pos}
-              className={'new-handle'}
-              style={handleStyle(0, handlesCnt, position)}/>
-      {desiredConns.map((h, i) => {
-        return <Handle key={h.id} type="source" id={h.id} position={pos}
-                style={handleStyle(i+1, handlesCnt, position)}/>
-      })}
-      <Handle key={newPipkaId(position, false)} type="source" id={newPipkaId(position, false)} position={pos}
-              className={'new-handle'}
-              style={handleStyle(handlesCnt-1, handlesCnt, position)}/>
-    </>
-  }
-}
-
-export function MarkdownNode({id, data: {content, connections}}: Pick<NodeProps<MarkdownData>, 'data' | 'id'>) {
+export function MarkdownNode({id, data: {content, nodeHandles}}: Pick<NodeProps<MarkdownData>, 'data' | 'id'>) {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
     updateNodeInternals(id);
-  }, [id, connections, updateNodeInternals])
+  }, [id, nodeHandles, updateNodeInternals])
 
   const trimmedContent = content.trim();
   const shortContent = trimmedContent.split("\n", 2)[0];
@@ -111,10 +89,8 @@ export function MarkdownNode({id, data: {content, connections}}: Pick<NodeProps<
           )
         }
       </div>
-      {renderConnectionsRow(connections || [], 'top')}
-      {renderConnectionsRow(connections || [], 'bottom')}
-      {renderConnectionsRow(connections || [], 'left')}
-      {renderConnectionsRow(connections || [], 'right')}
+
+      {makeHandles(nodeHandles)}
     </>
   );
 }

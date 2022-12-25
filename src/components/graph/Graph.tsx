@@ -1,4 +1,5 @@
 import ReactFlow, {
+  Connection,
   ConnectionMode,
   Controls,
   MiniMap,
@@ -11,6 +12,7 @@ import {MarkdownData, MarkdownNode} from "../markdown-node/MarkdownNode";
 import {MarkdownEditorModal} from "../markdown-editor/MarkdownEditorModal";
 import {graphStateReduce} from "./graphState";
 import {GraphStorage} from "./graphStorage";
+import {sampleGraph} from "./sampleData";
 
 const nodeTypes = {
   markdown: MarkdownNode,
@@ -25,8 +27,7 @@ function InternalGraph({graphStorage}: GraphProps) {
   const { project } = useReactFlow();
 
   const [graph, dispatchGraphAction] = useReducer(graphStateReduce, {
-    nodes: [],
-    edges: [],
+    ...sampleGraph,
     draggingEdgeNow: false,
     isLoaded: false,
   })
@@ -64,7 +65,7 @@ function InternalGraph({graphStorage}: GraphProps) {
     if (mdEditor.node) {
       dispatchGraphAction({
         type: 'update',
-        newData: {content: newContent},
+        newData: { content: newContent, nodeHandles: mdEditor.node.data.nodeHandles },
         nodeId: mdEditor.node?.id
       })
       setMdEditor({});
@@ -81,8 +82,8 @@ function InternalGraph({graphStorage}: GraphProps) {
         onSelectCapture={console.log}
         onNodesChange={changes => dispatchGraphAction({type: 'rfNodeChange', changes})}
         onEdgesChange={changes => dispatchGraphAction({type: 'rfEdgeChange', changes})}
-        onConnect={connection => {
-          dispatchGraphAction({type: 'rfConnect', connection, newSourceHandle: Math.random().toString(), newTargetHandle: Math.random().toString()});
+        onConnect={(connection: Connection) => {
+          dispatchGraphAction({ type: 'rfConnect', connection });
         }}
         onEdgeUpdateStart={() => dispatchGraphAction({type: 'rfEdgeUpdateStart'})}
         onEdgeUpdate={(oldEdge, newConnection) => dispatchGraphAction({type: 'rfEdgeUpdate', oldEdge, newConnection})}
