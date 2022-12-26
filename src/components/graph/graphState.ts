@@ -10,9 +10,11 @@ import {
 import {MarkdownData} from "../markdown-node/MarkdownNode";
 import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 import {Graph} from "./graphStorage";
+import {CommandNodeData} from "../command-prompt/CommandPromptNode";
+import {PictureData} from "../picture/PictureNode";
 
 export interface GraphState {
-  nodes: Node<MarkdownData>[];
+  nodes: Node<NodeDataTypeValues>[];
   edges: Edge[];
   uploadingParams?: {
     position: XYPosition
@@ -26,6 +28,12 @@ interface UpdateNodeData {
   type: "update";
   nodeId: string;
   newData: any;
+}
+
+interface UpdateNodeWithCallback {
+  type: "updateCb";
+  nodeId: string;
+  updateFunc: (data: any) => any;
 }
 
 interface RFNodeChange {
@@ -63,13 +71,27 @@ interface RFPaneDoubleClick {
   event: MouseEvent
 }
 
+type NodeDataTypes = {
+  'markdown': MarkdownData,
+  'picture': PictureData,
+  'commandPrompt': CommandNodeData,
+}
+
+type NodeDataTypeKeys = keyof NodeDataTypes
+export type NodeDataTypeValues = NodeDataTypes[NodeDataTypeKeys]
+
+function isNodeOfType<T extends keyof NodeDataTypes>(node: Node, type: T): node is Node<NodeDataTypes[T]> {
+  return node.type === type
+}
+
 interface CreateNode {
   type: 'createNode'
   position: XYPosition
-  node?: {
-    type: string,
-    data: any
+  newNode: {
+    type: NodeDataTypeKeys,
+    data: NodeDataTypeValues
   }
+  afterNewNode?: (id: string) => GraphStateAction | void;
 }
 
 interface LoadingSucceed {
@@ -100,9 +122,8 @@ interface PictureUploadFinished {
 export type PictureUploadAction = PictureUploadStart | PictureUploadProgress | PictureUploadFinished
 
 export type GraphStateAction =
-  UpdateNodeData | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart |
-  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed |
-  PictureUploadAction;
+  UpdateNodeData | UpdateNodeWithCallback | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart |
+  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed | PictureUploadAction;
 
 function isConnectionPosition(value: string): value is ConnectionPosition {
   return ['top', 'bottom', 'left', 'right'].includes(value);
@@ -160,18 +181,23 @@ export interface NodeHandle {
   position: ConnectionPosition;
 }
 
+function updateNode(nodes: Node[], id: string, updateFunc: (data: any) => any) {
+  return nodes.map(node =>
+    (node.id === id)
+      ? {...node, data: updateFunc(node.data)}
+      : node);
+}
+
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
   switch (action.type) {
     case 'loadingSucceed':
       return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true};
     case 'loadingFailed':
       return {...state, isLoaded: true, loadingError: action.error};
+    case 'updateCb':
+      return {...state, nodes: updateNode(state.nodes, action.nodeId, action.updateFunc)};
     case 'update':
-      const nodes = state.nodes.map(node =>
-        (node.id === action.nodeId)
-          ? {...node, data: {...node.data, ...action.newData}}
-          : node);
-      return {...state, nodes};
+      return {...state, nodes: updateNode(state.nodes, action.nodeId, (old) => ({...old, ...action.newData}))};
     case 'rfNodeChange':
       return {...state, nodes: applyNodeChanges(action.changes, state.nodes)};
     case 'rfEdgeChange':
@@ -188,8 +214,10 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       if (!isConnectionPosition(sourcePosition) || !isConnectionPosition(targetPosition)) return state;
       if (isNaN(sourceNumber) || isNaN(targetNumber)) return state;
 
-      const updatedNodes: Node<MarkdownData>[] = state.nodes.map(node => {
-        if (node.id === action.connection.source) {
+      const updatedNodes = state.nodes.map(node => {
+        if (!isNodeOfType(node, 'markdown')) return node;
+
+        if (node.id === action.connection.source && node.data.nodeHandles !== undefined) {
           const updatedHandles = getUpdatedNodeHandles(node.data.nodeHandles, sourcePosition, sourceNumber)
           return {...node, data: {...node.data, nodeHandles: updatedHandles}}
         } else if (node.id === action.connection.target) {
@@ -213,12 +241,21 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       }
     case 'createNode':
       const newId = Math.random().toString();
-      return {...state, nodes: [...state.nodes, {
+      const newNode = {
         id: newId,
-        type: action.node?.type || 'markdown',
+        type: action.newNode.type,
         position: action.position,
-        data: action.node?.data || { content: '_double click me_', nodeHandles: INITIAL_HANDLES }
-      }]}
+        data: action.newNode.data
+      }
+
+      const newState = {...state, nodes: [...state.nodes, newNode]};
+      if (action.afterNewNode) {
+        const additionalAction = action.afterNewNode(newId);
+        if (additionalAction) {
+          return graphStateReduce(newState, additionalAction)
+        }
+      }
+      return newState;
     case "pictureUploadStart":
       return {...state,
         uploadingParams: {
@@ -234,7 +271,7 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
           return graphStateReduce(state, {
             type: 'createNode',
             position: state.uploadingParams.position,
-            node: {
+            newNode: {
               type: 'picture',
               data: {
                 picture_url: action.url,

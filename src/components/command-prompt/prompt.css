@@ -1,0 +1,53 @@
+.command-prompt {
+    border: 2px solid darkslategrey;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+
+    font-family: monospace;
+}
+
+.command-prompt .command {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.command-prompt .actions {
+    display: flex;
+    flex-direction: column;
+}
+
+.command-prompt .actions > div, .command-prompt .prompt-icon {
+    width: 32px;
+    height: 32px;
+    border: 1px solid lightgrey;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.actions .cancel {
+    border: 1px solid black;
+    background-image: url("icons/cancel.png");
+}
+
+.actions .apply {
+    border: 1px solid black;
+    background-image: url("icons/check.png");
+}
+
+.actions .reload {
+    border: 1px solid black;
+    background-image: url("icons/refresh.png");
+}
+
+.actions .run {
+    border: 1px solid black;
+    background-image: url("icons/run.png");
+}
+
+.actions .edit {
+    border: 1px solid black;
+    background-image: url("icons/edit.png");
+}

@@ -1,8 +1,8 @@
-import {MarkdownData} from "../markdown-node/MarkdownNode";
 import {Node, Edge} from "react-flow-renderer";
+import {NodeDataTypeValues} from "./graphState";
 
 export interface Graph {
-  nodes: Node<MarkdownData>[]
+  nodes: Node<NodeDataTypeValues>[]
   edges: Edge[]
 }
 
