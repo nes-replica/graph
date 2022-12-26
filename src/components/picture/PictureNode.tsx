@@ -71,7 +71,7 @@ export function PictureNode({
                         onResize(id, data.size.width, data.size.height);
                       }}
                       lockAspectRatio={shiftHeld}
-                      handle={<div className="handle rf-no-drag"/>}>
+                      handle={<div className="handle rf-no-drag"/>}> // FIXME: this is a hack to prevent the handle from being draggable, but it's not working
           <img alt={description} src={picture_url} width={preview_width} height={preview_height}/>
         </ResizableBox>
       ) : (

@@ -212,7 +212,6 @@ function InternalGraph({graphStorage}: GraphProps) {
         }}
         deleteKeyCode={'Delete'}
         connectionMode={ConnectionMode.Loose}
-        noDragClassName={'rf-no-drag'}
       >
         <MiniMap/>
         <Controls/>
