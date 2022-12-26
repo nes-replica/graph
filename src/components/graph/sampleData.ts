@@ -1,5 +1,6 @@
 import {Edge, Node} from "react-flow-renderer";
 import {MarkdownData} from "../markdown-node/MarkdownNode";
+import {INITIAL_HANDLES} from "./graphState";
 
 const initialNodes: Node<MarkdownData>[] = [
   {
@@ -7,9 +8,7 @@ const initialNodes: Node<MarkdownData>[] = [
     type: 'markdown',
     data: {
       content: 'Input _Node_',
-      connections: [
-        {id: 'x1', position: 'bottom'}
-      ]
+      nodeHandles: INITIAL_HANDLES
     },
     position: {x: 250, y: 25},
   },
@@ -19,24 +18,13 @@ const initialNodes: Node<MarkdownData>[] = [
     type: 'markdown',
     data: {
       content: "Other no2de",
-      connections: [
-        {id: 'x1', position: 'left'}
-      ]
+      nodeHandles: INITIAL_HANDLES
     },
     position: {x: 100, y: 125},
-  },
-
-  {
-    id: '3',
-    type: 'markdown',
-    data: {content: "NODE 3"},
-    position: {x: 300, y: 75},
   }
 ];
 
-const initialEdges: Edge[] = [
-  {id: 'e1-2', source: '1', target: '2', sourceHandle: 'x1', targetHandle: 'x1'},
-];
+const initialEdges: Edge[] = [];
 
 
 export const sampleGraph = {
