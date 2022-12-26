@@ -1,0 +1,21 @@
+.picture-node-container {
+    border-radius: 5px;
+    border: 5px brown solid;
+}
+
+.picture-node-container img {
+    display: block;
+}
+
+.picture-node-container .handle {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    mask-image: url(/public/resize.svg);
+    transform: rotate(90deg);
+    cursor: nwse-resize;
+}

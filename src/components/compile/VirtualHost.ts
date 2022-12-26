@@ -11,19 +11,19 @@ const nullCancellationToken = new class implements ts.CancellationToken {
   }
 }();
 
-function isNodeModulesPath(filename) {
+function isNodeModulesPath(filename: string): boolean {
   return filename.startsWith("/node_modules")
 }
 
-function realNodeModules(filename) {
+function realNodeModules(filename: string): string {
   return path.resolve(__dirname + "/../../.." + filename);
 }
 
 
 export default class VirtualHost implements ts.CompilerHost {
-  private readonly sourceFiles;
+  private readonly sourceFiles: Record<string, string>;
 
-  constructor(sourceFiles) {
+  constructor(sourceFiles: Record<string, string>) {
     this.sourceFiles = sourceFiles;
   }
 
@@ -44,7 +44,7 @@ export default class VirtualHost implements ts.CompilerHost {
 
   fileExists(fileName: string): boolean {
     if (isNodeModulesPath(fileName)) {
-      return fs.existsSync(realNodeModules(isNodeModulesPath(fileName)));
+      return fs.existsSync(realNodeModules(fileName));
     }
     if (fileName in this.sourceFiles) {
       return true;
@@ -81,7 +81,7 @@ export default class VirtualHost implements ts.CompilerHost {
     return undefined;
   }
 
-  writtenFiles = {};
+  writtenFiles: Record<string, string> = {};
 
   writeFile(fileName: string, text: string, writeByteOrderMark: boolean, onError: ((message: string) => void) | undefined, sourceFiles: readonly ts.SourceFile[] | undefined, data: ts.WriteFileCallbackData | undefined): void {
     this.writtenFiles[fileName] = text;
@@ -131,14 +131,19 @@ export default class VirtualHost implements ts.CompilerHost {
     return undefined;
   }
 
-  createdSourceFiles = {};
+  createdSourceFiles: Record<string, ts.SourceFile> = {};
 
   getSourceFile(fileName: string, languageVersionOrOptions: ts.ScriptTarget | ts.CreateSourceFileOptions, onError?: (message: string) => void, shouldCreateNewSourceFile?: boolean): ts.SourceFile | undefined {
     if (shouldCreateNewSourceFile) {
       throw new Error("dont know how to create source file (getSourceFile(" + arguments.toString() + "))")
     }
     if (!(fileName in this.createdSourceFiles)) {
-      this.createdSourceFiles[fileName] = ts.createSourceFile(fileName, this.readFile(fileName), languageVersionOrOptions);
+      const file = this.readFile(fileName);
+      if (file) {
+        this.createdSourceFiles[fileName] = ts.createSourceFile(fileName, file, languageVersionOrOptions);
+      } else {
+        throw new Error("file not found: " + fileName);
+      }
     }
     return this.createdSourceFiles[fileName];
   }
