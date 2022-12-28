@@ -19,7 +19,7 @@ export function handleDropzoneFile(file: File, position: XYPosition, dispatch: (
       error: reader.error || new Error('file upload aborted'),
     })
   })
-  reader.addEventListener("load", function() {
+  reader.addEventListener("load", function () {
     const result = reader.result
     if (result !== null && !(result instanceof ArrayBuffer)) {
       dispatch({

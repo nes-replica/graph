@@ -2,7 +2,6 @@
 import { PhpWeb as PHP } from 'php-wasm/PhpWeb';
 import {useEffect, useState} from "react";
 
-
 export function PhpComponent()  {
   const [code, setCode] = useState("<?php $name = \"Rob\";\necho \"Hello, $name!\";");
   const [result, setResult] = useState<any>(null);

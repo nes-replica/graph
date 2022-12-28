@@ -1,5 +1,5 @@
 import {Edge, Node} from "react-flow-renderer";
-import {MarkdownData} from "../markdown-node/MarkdownNode";
+import {MarkdownData} from "./markdown/markdown-node/MarkdownNode";
 import {INITIAL_HANDLES} from "./graphState";
 
 const initialNodes: Node<MarkdownData>[] = [

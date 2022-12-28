@@ -1,9 +1,9 @@
-import {NodeProps} from "react-flow-renderer/dist/esm/types/nodes";
-import {Markdown} from "../markdown/Markdown";
+import {Markdown} from "../Markdown";
 import './MarkdownNode.css';
 import {useEffect, useState} from "react";
 import {Handle, Position, useUpdateNodeInternals} from "react-flow-renderer";
-import {ConnectionPosition, NodeHandle} from "../graph/graphState";
+import {ConnectionPosition, NodeHandle} from "../../graphState";
+import {CustomNodeProps} from "../../customNodeProps";
 
 export interface MarkdownData {
   content: string;
@@ -17,6 +17,9 @@ function toRFPosition(connPosition: ConnectionPosition) {
     case "left": return Position.Left;
     case "right": return Position.Right;
   }
+
+  //never reach
+  return Position.Top
 }
 
 function handleStyle(i: number, total: number, position: ConnectionPosition) {
@@ -64,7 +67,7 @@ function makeHandles(handles: NodeHandle[]) {
   return [...topHandleRowRendered, ...bottomHandleRowRendered, ...leftHandleRowRendered, ...rightHandleRowRendered]
 }
 
-export function MarkdownNode({id, data: {content, nodeHandles}}: Pick<NodeProps<MarkdownData>, 'data' | 'id'>) {
+export function MarkdownNode({id, data: {content, nodeHandles}}: CustomNodeProps<MarkdownData>) {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import {Markdown} from "../markdown/Markdown";
+import {Markdown} from "../Markdown";
 import './editor.css';
 
 interface MarkdownEditorProps {
