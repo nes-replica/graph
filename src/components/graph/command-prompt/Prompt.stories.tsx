@@ -21,7 +21,6 @@ export const New: ComponentStory<typeof CommandPromptNode> = () => {
   const [executionLog, setExecutionLog] = useState<string[]>([]);
 
   const runCommand = useCallback((command: string) => {
-    const instanceId = Math.random().toString();
     setExecutionLog((prev) => [command, ...prev]);
   }, [setExecutionLog]);
 

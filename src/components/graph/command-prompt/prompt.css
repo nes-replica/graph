@@ -29,25 +29,25 @@
 
 .actions .cancel {
     border: 1px solid black;
-    background-image: url("icons/cancel.png");
+    background-image: url("/public/icons/cancel.png");
 }
 
 .actions .apply {
     border: 1px solid black;
-    background-image: url("icons/check.png");
+    background-image: url("/public/icons/check.png");
 }
 
 .actions .reload {
     border: 1px solid black;
-    background-image: url("icons/refresh.png");
+    background-image: url("/public/icons/refresh.png");
 }
 
 .actions .run {
     border: 1px solid black;
-    background-image: url("icons/run.png");
+    background-image: url("/public/icons/run.png");
 }
 
 .actions .edit {
     border: 1px solid black;
-    background-image: url("icons/edit.png");
+    background-image: url("/public/icons/edit.png");
 }

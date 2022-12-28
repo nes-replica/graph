@@ -7,11 +7,11 @@ import {
   EdgeChange,
   Node, updateEdge, XYPosition
 } from "react-flow-renderer";
-import {MarkdownData} from "../markdown-node/MarkdownNode";
+import {MarkdownData} from "./markdown/markdown-node/MarkdownNode";
 import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 import {Graph} from "./graphStorage";
-import {CommandNodeData} from "../command-prompt/CommandPromptNode";
-import {PictureData} from "../picture/PictureNode";
+import {CommandNodeData} from "./command-prompt/CommandPromptNode";
+import {PictureData} from "./picture/PictureNode";
 
 export interface GraphState {
   nodes: Node<NodeDataTypeValues>[];
@@ -22,6 +22,7 @@ export interface GraphState {
   draggingEdgeNow: boolean;
   isLoaded: boolean;
   loadingError?: string;
+  nodeCount: number
 }
 
 interface UpdateNodeData {
@@ -86,10 +87,10 @@ function isNodeOfType<T extends keyof NodeDataTypes>(node: Node, type: T): node 
 
 interface CreateNode {
   type: 'createNode'
-  position: XYPosition
-  newNode: {
+  node: {
     type: NodeDataTypeKeys,
     data: NodeDataTypeValues
+    position: XYPosition
   }
   afterNewNode?: (id: string) => GraphStateAction | void;
 }
@@ -127,14 +128,6 @@ export type GraphStateAction =
 
 function isConnectionPosition(value: string): value is ConnectionPosition {
   return ['top', 'bottom', 'left', 'right'].includes(value);
-}
-
-export function graphStateReduceLog(state: GraphState, action: GraphStateAction): GraphState {
-  console.log("old state", state)
-  console.log("action", action)
-  const newState = graphStateReduce(state, action)
-  console.log("new state", newState)
-  return newState
 }
 
 export const INITIAL_HANDLES: NodeHandle[] = [
@@ -182,10 +175,7 @@ export interface NodeHandle {
 }
 
 function updateNode(nodes: Node[], id: string, updateFunc: (data: any) => any) {
-  return nodes.map(node =>
-    (node.id === id)
-      ? {...node, data: updateFunc(node.data)}
-      : node);
+  return nodes.map(node => (node.id === id) ? {...node, data: updateFunc(node.data)} : node);
 }
 
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
@@ -240,28 +230,19 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
         return state;
       }
     case 'createNode':
-      const newId = Math.random().toString();
-      const newNode = {
-        id: newId,
-        type: action.newNode.type,
-        position: action.position,
-        data: action.newNode.data
-      }
+      const id = state.nodeCount.toString()
+      const {type, data, position} = action.node
+      const newNode = {id, type, position, data}
 
-      const newState = {...state, nodes: [...state.nodes, newNode]};
+      const newState = {...state, nodeCount: state.nodeCount + 1, nodes: [...state.nodes, newNode]};
       if (action.afterNewNode) {
-        const additionalAction = action.afterNewNode(newId);
-        if (additionalAction) {
-          return graphStateReduce(newState, additionalAction)
-        }
+        const additionalAction = action.afterNewNode(id);
+
+        if (additionalAction) return graphStateReduce(newState, additionalAction)
       }
       return newState;
     case "pictureUploadStart":
-      return {...state,
-        uploadingParams: {
-          position: action.position
-        }
-      };
+      return {...state, uploadingParams: {position: action.position}};
     case "pictureUploadFinished":
       if (action.error) {
         alert(`Uploading failed: ${action.error}`);
@@ -270,15 +251,10 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
         if (state.uploadingParams) {
           return graphStateReduce(state, {
             type: 'createNode',
-            position: state.uploadingParams.position,
-            newNode: {
+            node: {
               type: 'picture',
-              data: {
-                picture_url: action.url,
-                preview: {
-                  width: 300, height: 200,
-                }
-              }
+              data: {picture_url: action.url, preview: {width: 300, height: 200}},
+              position: state.uploadingParams.position,
             }
           })
         }

@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import {MarkdownEditor} from "./MarkdownEditor";
 import {MarkdownEditorModal} from "./MarkdownEditorModal";
-import {Markdown} from "../markdown/Markdown";
+import {Markdown} from "../Markdown";
 
 export default {
   title: 'Markdown Editor',

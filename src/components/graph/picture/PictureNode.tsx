@@ -1,8 +1,8 @@
-import {NodeProps} from "react-flow-renderer/dist/esm/types/nodes";
 import './style.css';
 import {ResizableBox, ResizeCallbackData} from "react-resizable";
 import * as React from "react";
 import {useEffect, useState} from "react";
+import {CustomNodeProps} from "../customNodeProps";
 
 export interface PictureData {
   picture_url: string;
@@ -46,20 +46,21 @@ export interface Resizable {
   onResize?: OnNodeResize
 }
 
-export type PictureNodeProps = Pick<NodeProps<PictureData>, 'id' | 'data'> & Resizable
+export type PictureNodeProps = CustomNodeProps<PictureData> & Resizable
 
-export function PictureNode({
-                              id,
-                              data: {
-                                picture_url,
-                                description,
-                                preview: {
-                                  width: preview_width,
-                                  height: preview_height
-                                }
-                              },
-                              onResize
-                            }: PictureNodeProps) {
+export function PictureNode(props: PictureNodeProps) {
+  const {
+    id,
+    data: {
+      picture_url,
+      description,
+      preview: {
+        width: preview_width,
+        height: preview_height
+      }
+    },
+    onResize
+  } = props
 
   const shiftHeld = useShiftHandler();
 
@@ -71,7 +72,7 @@ export function PictureNode({
                         onResize(id, data.size.width, data.size.height);
                       }}
                       lockAspectRatio={shiftHeld}
-                      handle={<div className="handle rf-no-drag"/>}> // FIXME: this is a hack to prevent the handle from being draggable, but it's not working
+                      handle={<div className="handle rf-no-drag"/>}>
           <img alt={description} src={picture_url} width={preview_width} height={preview_height}/>
         </ResizableBox>
       ) : (

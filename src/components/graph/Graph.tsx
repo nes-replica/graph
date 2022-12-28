@@ -7,7 +7,6 @@ import ReactFlow, {
   useReactFlow
 } from 'react-flow-renderer';
 import {
-  KeyboardEventHandler,
   MouseEvent as ReactMouseEvent, useCallback,
   useEffect,
   useMemo,
@@ -15,21 +14,17 @@ import {
   useRef,
   useState
 } from "react";
-import {MarkdownData, MarkdownNode} from "../markdown-node/MarkdownNode";
-import {MarkdownEditorModal} from "../markdown-editor/MarkdownEditorModal";
+import {MarkdownData, MarkdownNode} from "./markdown/markdown-node/MarkdownNode";
+import {MarkdownEditorModal} from "./markdown/markdown-editor/MarkdownEditorModal";
 import {graphStateReduce, INITIAL_HANDLES} from "./graphState";
 import {GraphStorage} from "./graphStorage";
-import {
-  CommandNodeData,
-  CommandNodeInteraction,
-  CommandPromptNode,
-  CommandPromptNodeProps
-} from "../command-prompt/CommandPromptNode";
+import {CommandNodeData, CommandPromptNode, makeCommandNodeInteractionProps} from "./command-prompt/CommandPromptNode";
 import {NodeTypes} from "react-flow-renderer/dist/esm/types";
-import {OnNodeResize, PictureNode, PictureNodeProps} from "../picture/PictureNode";
+import {OnNodeResize, PictureNode, PictureNodeProps} from "./picture/PictureNode";
 import {DropEvent, FileRejection, useDropzone} from 'react-dropzone';
 import {handleDropzoneFile} from "./dropzoneHandler";
 import {sampleGraph} from "./sampleData";
+import {CustomNodeProps} from "./customNodeProps";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -37,19 +32,20 @@ interface MdNodeEditorState {
 
 function InternalGraph({graphStorage}: GraphProps) {
   const reactFlowRef = useRef<HTMLDivElement>(null);
-  const { project } = useReactFlow();
+  const {project} = useReactFlow();
 
   const [graph, dispatchGraphAction] = useReducer(graphStateReduce, {
     ...sampleGraph,
     draggingEdgeNow: false,
     isLoaded: false,
+    nodeCount: 0
   })
 
   useEffect(() => {
     graphStorage.get()
       .then(graph => {
         console.log("got from storage", graph);
-        dispatchGraphAction({ type: 'loadingSucceed', graph: graph });
+        dispatchGraphAction({type: 'loadingSucceed', graph: graph});
       })
   }, [graphStorage]);
 
@@ -79,7 +75,7 @@ function InternalGraph({graphStorage}: GraphProps) {
     if (mdEditor.node) {
       dispatchGraphAction({
         type: 'update',
-        newData: { content: newContent, nodeHandles: mdEditor.node.data.nodeHandles },
+        newData: {content: newContent, nodeHandles: mdEditor.node.data.nodeHandles},
         nodeId: mdEditor.node?.id
       })
       setMdEditor({});
@@ -112,13 +108,7 @@ function InternalGraph({graphStorage}: GraphProps) {
 
   function PictureNodeResizable(props: PictureNodeProps) {
     const onResize: OnNodeResize = (id, width, height) => {
-      dispatchGraphAction({
-        type: 'update',
-        nodeId: id,
-        newData: {
-          preview: {width, height}
-        }
-      })
+      dispatchGraphAction({type: 'update', nodeId: id, newData: {preview: {width, height}}})
     };
     return PictureNode({...props, onResize})
   }
@@ -126,57 +116,37 @@ function InternalGraph({graphStorage}: GraphProps) {
   const callPromptPressed = useKeyPress("/");
   useEffect(() => {
     if (!reactFlowRef.current || !callPromptPressed) return;
-    const { height, width } = reactFlowRef.current.getBoundingClientRect();
+    const {height, width} = reactFlowRef.current.getBoundingClientRect();
     dispatchGraphAction({
       type: 'createNode',
-      position: project({ x: width/2, y: height/2 }),
-      newNode: {
+      node: {
         type: 'commandPrompt',
-        data: {
-          command: ''
-        }
+        data: {command: ''},
+        position: project({x: width / 2, y: height / 2}),
       },
-      afterNewNode: (newId) => {
-        setActivePrompt(newId);
-      },
+      afterNewNode: (newId) => setActivePrompt(newId)
     })
   }, [project, reactFlowRef, callPromptPressed]);
 
   const [activePrompt, setActivePrompt] = useState<string | undefined>();
 
-  const linkedCommandPromptNode = useCallback((props: CommandPromptNodeProps) => {
-    const interactionProps: CommandNodeInteraction = {
-      editMode: props.id === activePrompt,
-      onUpdate: newCommand => {
-        dispatchGraphAction({
-          type: "updateCb",
-          nodeId: props.id,
-          updateFunc: (data: CommandNodeData): CommandNodeData => {
-            return {...data, command: newCommand}
-          }
-        })
-        setActivePrompt(undefined);
-      },
-      onCancel: () => {
-        setActivePrompt(undefined);
-      },
-      onReload: () => {
-        console.log("RUN COMMAND", props.data.command)
-      },
-      onRequestToEdit: () => {
-        setActivePrompt(props.id);
-      },
-    }
+  const CommandPromptNodeInteractive = useCallback((props: CustomNodeProps<CommandNodeData>) => {
+    const interactionProps = makeCommandNodeInteractionProps(
+      props,
+      activePrompt,
+      setActivePrompt,
+      (nodeId: string, updateFunc: (data: any) => any) => dispatchGraphAction({type: "updateCb", nodeId, updateFunc})
+    )
     return CommandPromptNode({...props, ...interactionProps})
   }, [activePrompt, dispatchGraphAction])
 
   const nodeTypes: NodeTypes = useMemo(() => {
     return {
       markdown: MarkdownNode,
-      commandPrompt: linkedCommandPromptNode,
+      commandPrompt: CommandPromptNodeInteractive,
       picture: PictureNodeResizable,
     }
-  }, [linkedCommandPromptNode])
+  }, [CommandPromptNodeInteractive])
 
   return (
     <>
@@ -187,7 +157,7 @@ function InternalGraph({graphStorage}: GraphProps) {
         onSelectCapture={console.log}
         onNodesChange={changes => dispatchGraphAction({type: 'rfNodeChange', changes})}
         onEdgesChange={changes => dispatchGraphAction({type: 'rfEdgeChange', changes})}
-        onConnect={ connection => dispatchGraphAction({ type: 'rfConnect', connection }) }
+        onConnect={connection => dispatchGraphAction({type: 'rfConnect', connection})}
         onEdgeUpdateStart={() => dispatchGraphAction({type: 'rfEdgeUpdateStart'})}
         onEdgeUpdate={(oldEdge, newConnection) => dispatchGraphAction({type: 'rfEdgeUpdate', oldEdge, newConnection})}
         onEdgeUpdateEnd={(_, edge) => dispatchGraphAction({type: 'rfEdgeUpdateEnd', edge})}
@@ -201,10 +171,10 @@ function InternalGraph({graphStorage}: GraphProps) {
               const {top, left} = reactFlowRef.current.getBoundingClientRect();
               dispatchGraphAction({
                 type: 'createNode',
-                position: project({ x: event.clientX - left, y: event.clientY - top }),
-                newNode: {
+                node: {
                   type: 'markdown',
-                  data: { content: '_double click me_', nodeHandles: INITIAL_HANDLES }
+                  data: {content: '_double click me_', nodeHandles: INITIAL_HANDLES},
+                  position: project({x: event.clientX - left, y: event.clientY - top})
                 }
               })
             }
@@ -220,7 +190,7 @@ function InternalGraph({graphStorage}: GraphProps) {
       {
         mdEditor.node && <MarkdownEditorModal originalText={mdEditor.node?.data.content || ''}
                                               onSave={onSaveMarkdownEditor} onCancel={onCancelMarkdownEditor}
-                                              isOpen={true} />
+                                              isOpen={true}/>
       }
     </>
   );
@@ -232,6 +202,6 @@ export interface GraphProps {
 
 export function Graph({graphStorage}: GraphProps) {
   return <ReactFlowProvider>
-    <InternalGraph graphStorage={graphStorage} />
+    <InternalGraph graphStorage={graphStorage}/>
   </ReactFlowProvider>
 }

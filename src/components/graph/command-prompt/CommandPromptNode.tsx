@@ -1,12 +1,12 @@
 import {useEffect, useRef, useState} from "react";
 import './prompt.css';
-import {NodeProps} from "react-flow-renderer/dist/esm/types/nodes";
+import {CustomNodeProps} from "../customNodeProps";
 
 export interface CommandNodeData {
   command: string;
 }
 
-export interface CommandNodeInteraction {
+export interface CommandNodeInteractionProps {
   editMode?: boolean;
   onUpdate?: (newCommand: string) => void;
   onCancel?: () => void;
@@ -14,11 +14,36 @@ export interface CommandNodeInteraction {
   onRequestToEdit?: () => void;
 }
 
-export type CommandPromptNodeProps = Pick<NodeProps<CommandNodeData>, 'data' | 'id'>;
-export type CommandPromptInteractiveNodeProps = CommandPromptNodeProps & CommandNodeInteraction;
+export type CommandPromptInteractiveNodeProps = CustomNodeProps<CommandNodeData> & CommandNodeInteractionProps;
+
+export function makeCommandNodeInteractionProps(
+  props: CustomNodeProps<CommandNodeData>,
+  activePrompt: string | undefined,
+  setActivePrompt: (id: string | undefined) => void,
+  onUpdate: (nodeId: string, updateFunc: (data: any) => any) => void
+): CommandNodeInteractionProps {
+  return {
+    editMode: props.id === activePrompt,
+    onUpdate: newCommand => {
+      onUpdate(props.id, (data: CommandNodeData): CommandNodeData => ({...data, command: newCommand}))
+      setActivePrompt(undefined);
+    },
+    onCancel: () => {
+      setActivePrompt(undefined);
+    },
+    onReload: () => {
+      console.log("RUN COMMAND", props.data.command)
+    },
+    onRequestToEdit: () => {
+      setActivePrompt(props.id);
+    },
+  }
+}
+
 
 export function CommandPromptNode(
-  { data: { command },
+  {
+    data: {command},
     editMode,
     onUpdate, onCancel, onReload, onRequestToEdit
   }: CommandPromptInteractiveNodeProps
@@ -39,7 +64,7 @@ export function CommandPromptNode(
       <>
         <div className={'prompt-icon'}>/</div>
         <textarea ref={inputRef} className={'command'}
-                  value={value} onChange={(ev) => setValue(ev.target.value)} />
+                  value={value} onChange={(ev) => setValue(ev.target.value)}/>
         <div className={'actions'}>
           <div className={'cancel'} onClick={onCancel}></div>
           <div className={'apply'} onClick={onUpdate && (() => onUpdate(value))}></div>
