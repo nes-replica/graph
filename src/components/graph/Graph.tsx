@@ -25,9 +25,17 @@ import {DropEvent, FileRejection, useDropzone} from 'react-dropzone';
 import {handleDropzoneFile} from "./dropzoneHandler";
 import {sampleGraph} from "./sampleData";
 import {CustomNodeProps} from "./customNodeProps";
+import {ScriptNode} from "./script/ScriptNode";
+import './Graph.css';
+import {graphEvents} from "./graphEvents";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
+}
+
+interface ContextMenuState {
+  x: number;
+  y: number;
 }
 
 function InternalGraph({graphStorage}: GraphProps) {
@@ -40,6 +48,8 @@ function InternalGraph({graphStorage}: GraphProps) {
     isLoaded: false,
     nodeCount: 0
   })
+
+  const [contextMenuState, setContextMenuState] = useState<ContextMenuState | undefined>();
 
   useEffect(() => {
     graphStorage.get()
@@ -145,8 +155,14 @@ function InternalGraph({graphStorage}: GraphProps) {
       markdown: MarkdownNode,
       commandPrompt: CommandPromptNodeInteractive,
       picture: PictureNodeResizable,
+      script: ScriptNode,
     }
   }, [CommandPromptNodeInteractive])
+
+  const contextMenuItems = useMemo(() => ({
+    'Markdown node': () => {},
+    'Script node': () => {},
+  }), [])
 
   return (
     <>
@@ -164,25 +180,45 @@ function InternalGraph({graphStorage}: GraphProps) {
         nodeTypes={nodeTypes}
         fitView={true}
         onNodeDoubleClick={onNodeDoubleClick}
+        onClick={(event) => {
+          setContextMenuState(undefined);
+        }}
         onDoubleClickCapture={event => {
+          setContextMenuState(undefined);
           if (reactFlowRef.current && event.target instanceof Element) {
             const targetIsPane = event.target.classList.contains('react-flow__pane');
             if (targetIsPane) {
               const {top, left} = reactFlowRef.current.getBoundingClientRect();
-              dispatchGraphAction({
-                type: 'createNode',
-                node: {
-                  type: 'markdown',
-                  data: {content: '_double click me_', nodeHandles: INITIAL_HANDLES},
-                  position: project({x: event.clientX - left, y: event.clientY - top})
-                }
-              })
+              const position = project({x: event.clientX - left, y: event.clientY - top});
+              dispatchGraphAction(graphEvents.createMarkdownNode(position))
             }
           }
+        }}
+        onContextMenu={event => {
+          if (reactFlowRef.current && event.target instanceof Element) {
+            const targetIsPane = event.target.classList.contains('react-flow__pane');
+            if (targetIsPane) {
+              setContextMenuState({x: event.clientX, y: event.clientY})
+            }
+          }
+          event.preventDefault();
         }}
         deleteKeyCode={'Delete'}
         connectionMode={ConnectionMode.Loose}
       >
+        {contextMenuState && (
+          <div className={'context-menu'} style={{
+            position: 'absolute',
+            top: contextMenuState.y,
+            left: contextMenuState.x,
+          }}>
+            {Object.entries(contextMenuItems).map(([label, onClick]) => (
+              <div className={'item'} key={label} onClick={onClick}>
+                {label}
+              </div>
+            ))}
+          </div>
+        )}
         <MiniMap/>
         <Controls/>
         <input {...getDropzoneFileInputProps()}/>

@@ -78,7 +78,7 @@ type NodeDataTypes = {
   'commandPrompt': CommandNodeData,
 }
 
-type NodeDataTypeKeys = keyof NodeDataTypes
+export type NodeDataTypeKeys = keyof NodeDataTypes
 export type NodeDataTypeValues = NodeDataTypes[NodeDataTypeKeys]
 
 function isNodeOfType<T extends keyof NodeDataTypes>(node: Node, type: T): node is Node<NodeDataTypes[T]> {

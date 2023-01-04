@@ -43,7 +43,8 @@ function makeHandle(id: string, position: ConnectionPosition, indexInRow: number
   />
 }
 
-function makeHandles(handles: NodeHandle[]) {
+function makeHandles(handles?: NodeHandle[]) {
+  handles = handles || [];
   const topHandleRow = handles.filter(h => h.position === 'top');
   const topHandleRowRendered = topHandleRow.map((handle, index) => {
     return makeHandle(handle.id, handle.position, index, topHandleRow.length);
