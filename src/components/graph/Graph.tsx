@@ -25,12 +25,17 @@ import {DropEvent, FileRejection, useDropzone} from 'react-dropzone';
 import {handleDropzoneFile} from "./dropzoneHandler";
 import {sampleGraph} from "./sampleData";
 import {CustomNodeProps} from "./customNodeProps";
-import {ScriptNode} from "./script/ScriptNode";
+import {ScriptData, ScriptNode} from "./script/node/ScriptNode";
 import './Graph.css';
 import {graphEvents} from "./graphEvents";
+import {ScriptEditorModal} from "./script/editor/ScriptEditorModal";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
+}
+
+interface ScriptNodeEditorState {
+  node?: Node<ScriptData>;
 }
 
 interface ContextMenuState {
@@ -70,11 +75,13 @@ function InternalGraph({graphStorage}: GraphProps) {
 
 
   const [mdEditor, setMdEditor] = useState<MdNodeEditorState>({});
+  const [scriptEditor, setScriptEditor] = useState<ScriptNodeEditorState>({});
 
-  function onNodeDoubleClick(event: ReactMouseEvent, node: Node<MarkdownData>) {
-    setMdEditor({
-      node: node,
-    });
+  function onNodeDoubleClick(event: ReactMouseEvent, node: Node) {
+    switch (node.type) {
+      case 'markdown': setMdEditor({node: node}); break;
+      case 'script': setScriptEditor({node: node}); break;
+    }
   }
 
   function onCancelMarkdownEditor() {
@@ -92,6 +99,23 @@ function InternalGraph({graphStorage}: GraphProps) {
     } else {
       console.warn("WARN impossible state: onSaveMarkdownEditor called without node set")
     }
+  }
+
+  function onSaveScriptEditor(newScriptData: ScriptData) {
+    if (scriptEditor.node) {
+      dispatchGraphAction({
+        type: 'update',
+        newData: newScriptData,
+        nodeId: scriptEditor.node?.id
+      })
+      setScriptEditor({});
+    } else {
+      console.warn("WARN impossible state: onSaveScriptEditor called without node set")
+    }
+  }
+
+  function onCancelScriptEditor() {
+    setScriptEditor({});
   }
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[], event: DropEvent) => {
@@ -160,9 +184,19 @@ function InternalGraph({graphStorage}: GraphProps) {
   }, [CommandPromptNodeInteractive])
 
   const contextMenuItems = useMemo(() => ({
-    'Markdown node': () => {},
-    'Script node': () => {},
-  }), [])
+    'Markdown node': () => {
+      if (!contextMenuState) return;
+      dispatchGraphAction(graphEvents.createMarkdownNode(project({x: contextMenuState.x, y: contextMenuState.y})));
+    },
+    'Script node': () => {
+      if (!contextMenuState) return;
+      dispatchGraphAction(graphEvents.createNode('script', {
+        language: 'javascript',
+        name: 'untitled script',
+        script: '',
+      }, project({x: contextMenuState.x, y: contextMenuState.y})));
+    },
+  }), [project, contextMenuState])
 
   return (
     <>
@@ -227,6 +261,11 @@ function InternalGraph({graphStorage}: GraphProps) {
         mdEditor.node && <MarkdownEditorModal originalText={mdEditor.node?.data.content || ''}
                                               onSave={onSaveMarkdownEditor} onCancel={onCancelMarkdownEditor}
                                               isOpen={true}/>
+      }
+      {
+        scriptEditor.node && <ScriptEditorModal scriptData={scriptEditor.node.data}
+                                                onSave={onSaveScriptEditor} onCancel={onCancelScriptEditor}
+                                                isOpen={true}/>
       }
     </>
   );

@@ -1,0 +1,21 @@
+.script-editor-modal-container {
+    height: 100%;
+}
+
+.script-editor-modal-container > .header {
+    height: 10%;
+}
+
+.script-editor-modal-container > .header input {
+    font-size: 1.2em;
+}
+
+.script-editor-modal-container > .editor {
+    height: 80%;
+}
+
+.script-editor-modal-container > .actions {
+    display: flex;
+    height: 10%;
+    justify-content: right;
+}

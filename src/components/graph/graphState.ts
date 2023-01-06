@@ -12,6 +12,7 @@ import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 import {Graph} from "./graphStorage";
 import {CommandNodeData} from "./command-prompt/CommandPromptNode";
 import {PictureData} from "./picture/PictureNode";
+import {ScriptData} from "./script/node/ScriptNode";
 
 export interface GraphState {
   nodes: Node<NodeDataTypeValues>[];
@@ -76,6 +77,7 @@ type NodeDataTypes = {
   'markdown': MarkdownData,
   'picture': PictureData,
   'commandPrompt': CommandNodeData,
+  'script': ScriptData,
 }
 
 export type NodeDataTypeKeys = keyof NodeDataTypes

@@ -1,0 +1,26 @@
+.script-node {
+    border: 1px solid fuchsia;
+    border-radius: 5px;
+    padding: 7px;
+    font-family: monospace;
+}
+
+.script-node > .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.script-node > .header-row > .name {
+    font-size: 1.2em;
+    margin-right: 1em;
+}
+
+.script-node > .header-row > .actions {
+    display: flex;
+}
+
+.script-node > .last-run {
+    font-size: 0.8em;
+    margin-top: 0.5em;
+}

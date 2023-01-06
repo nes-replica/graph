@@ -1,5 +1,6 @@
-import {CustomNodeProps} from "../customNodeProps";
+import {CustomNodeProps} from "../../customNodeProps";
 import {useCallback} from "react";
+import "./node.css";
 
 export interface ScriptData {
   language: 'javascript';
@@ -23,16 +24,13 @@ export function ScriptNode({
     }
   }, [language, script]);
 
-  return <div>
-    {name}
-    {(lastRunMillis ? (
-      <button onClick={executeScript}>RUN</button>
-    ) : (
-      <>
-        <button onClick={executeScript}>RERUN</button>
-        <br />
-        Last run: {lastRun}
-      </>
-    ))}
+  return <div className={'script-node'}>
+    <div className={"header-row"}>
+      <div className={"name"}>{name}</div>
+      <div className={"actions"}>
+        <button onClick={executeScript}>{lastRunMillis ? 'reRUN' : 'RUN'}</button>
+      </div>
+    </div>
+    {lastRunMillis && <div className={"last-run"}>Last run: {lastRun}</div>}
   </div>
 }
