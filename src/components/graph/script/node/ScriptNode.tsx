@@ -1,7 +1,8 @@
 import {CustomNodeProps} from "../../customNodeProps";
-import {useCallback} from "react";
+import {Ref, RefObject, useCallback} from "react";
 import "./node.css";
 import {NodeHandle} from "../../graphState";
+import {ReflectionApi} from "../../../reflectionApi/ReflectionApi";
 
 export interface ScriptData {
   language: 'javascript';
@@ -11,10 +12,15 @@ export interface ScriptData {
   nodeHandles?: NodeHandle[];
 }
 
-export type ScriptNodeProps = CustomNodeProps<ScriptData>
+export interface ScriptNodeReflectionProps {
+  reflectionApi?: RefObject<ReflectionApi>;
+}
+export type ScriptNodeProps = CustomNodeProps<ScriptData> & ScriptNodeReflectionProps
 
 export function ScriptNode({
+                              id,
                               data: {name, language, script, lastRunMillis},
+                              reflectionApi,
                            }: ScriptNodeProps) {
 
   const lastRun = lastRunMillis ? new Date(lastRunMillis).toLocaleString() : 'never';
@@ -22,9 +28,12 @@ export function ScriptNode({
   const executeScript = useCallback(() => {
     switch (language) {
     case 'javascript':
-      const result = eval(script);
+      const nodeTraversal = reflectionApi?.current?.getNode(id);
+      const node = nodeTraversal?.node;
+      const edges = nodeTraversal?.edges();
+      eval(script);
     }
-  }, [language, script]);
+  }, [id, reflectionApi, language, script]);
 
   return <div className={'script-node'}>
     <div className={"header-row"}>

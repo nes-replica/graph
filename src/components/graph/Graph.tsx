@@ -16,7 +16,7 @@ import {
 } from "react";
 import {MarkdownData, MarkdownNode} from "./markdown/markdown-node/MarkdownNode";
 import {MarkdownEditorModal} from "./markdown/markdown-editor/MarkdownEditorModal";
-import {graphStateReduce, INITIAL_HANDLES} from "./graphState";
+import {graphStateReduce} from "./graphState";
 import {GraphStorage} from "./graphStorage";
 import {CommandNodeData, CommandPromptNode, makeCommandNodeInteractionProps} from "./command-prompt/CommandPromptNode";
 import {NodeTypes} from "react-flow-renderer/dist/esm/types";
@@ -30,6 +30,7 @@ import './Graph.css';
 import {graphEvents} from "./graphEvents";
 import {ScriptEditorModal} from "./script/editor/ScriptEditorModal";
 import {MakeConnectable} from "./connectable-trait/connectable";
+import {buildReflectionApi, ReflectionApi} from "../reflectionApi/ReflectionApi";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -53,7 +54,13 @@ function InternalGraph({graphStorage}: GraphProps) {
     draggingEdgeNow: false,
     isLoaded: false,
     nodeCount: sampleGraph.nodes.length
-  })
+  });
+
+  const reflectionApi = useRef<ReflectionApi>(buildReflectionApi([], []));
+  // update reflectionApi ref when graph changes
+  useEffect(() => {
+    reflectionApi.current = buildReflectionApi(graph.nodes, graph.edges);
+  }, [graph.nodes, graph.edges]);
 
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | undefined>();
 
@@ -175,14 +182,18 @@ function InternalGraph({graphStorage}: GraphProps) {
     return CommandPromptNode({...props, ...interactionProps})
   }, [activePrompt, dispatchGraphAction])
 
+  const ScriptNodeReflecting = useCallback((props: CustomNodeProps<ScriptData>) => {
+    return ScriptNode({...props, reflectionApi})
+  }, [])
+
   const nodeTypes: NodeTypes = useMemo(() => {
     return {
       markdown: MakeConnectable(MarkdownNode),
       commandPrompt: CommandPromptNodeInteractive,
       picture: PictureNodeResizable,
-      script: MakeConnectable(ScriptNode),
+      script: MakeConnectable(ScriptNodeReflecting),
     }
-  }, [CommandPromptNodeInteractive])
+  }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
 
   const contextMenuItems = useMemo(() => ({
     'Markdown node': () => {
