@@ -183,7 +183,7 @@ function updateNode(nodes: Node[], id: string, updateFunc: (data: any) => any) {
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
   switch (action.type) {
     case 'loadingSucceed':
-      return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true};
+      return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true, nodeCount: action.graph.nodes.length}
     case 'loadingFailed':
       return {...state, isLoaded: true, loadingError: action.error};
     case 'updateCb':

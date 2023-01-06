@@ -1,12 +1,14 @@
 import {CustomNodeProps} from "../../customNodeProps";
 import {useCallback} from "react";
 import "./node.css";
+import {NodeHandle} from "../../graphState";
 
 export interface ScriptData {
   language: 'javascript';
   name: string;
   script: string;
   lastRunMillis?: number; // unix timestamp
+  nodeHandles?: NodeHandle[];
 }
 
 export type ScriptNodeProps = CustomNodeProps<ScriptData>

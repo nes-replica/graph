@@ -29,6 +29,7 @@ import {ScriptData, ScriptNode} from "./script/node/ScriptNode";
 import './Graph.css';
 import {graphEvents} from "./graphEvents";
 import {ScriptEditorModal} from "./script/editor/ScriptEditorModal";
+import {MakeConnectable} from "./connectable-trait/connectable";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -51,7 +52,7 @@ function InternalGraph({graphStorage}: GraphProps) {
     ...sampleGraph,
     draggingEdgeNow: false,
     isLoaded: false,
-    nodeCount: 0
+    nodeCount: sampleGraph.nodes.length
   })
 
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | undefined>();
@@ -176,10 +177,10 @@ function InternalGraph({graphStorage}: GraphProps) {
 
   const nodeTypes: NodeTypes = useMemo(() => {
     return {
-      markdown: MarkdownNode,
+      markdown: MakeConnectable(MarkdownNode),
       commandPrompt: CommandPromptNodeInteractive,
       picture: PictureNodeResizable,
-      script: ScriptNode,
+      script: MakeConnectable(ScriptNode),
     }
   }, [CommandPromptNodeInteractive])
 

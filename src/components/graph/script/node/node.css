@@ -5,6 +5,10 @@
     font-family: monospace;
 }
 
+.selected .script-node {
+    border-width: 3px;
+}
+
 .script-node > .header-row {
     display: flex;
     justify-content: space-between;

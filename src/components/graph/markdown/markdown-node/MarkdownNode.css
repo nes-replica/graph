@@ -15,13 +15,6 @@
     left: -15%;
 }
 
-.markdown-node-container ~ .react-flow__handle.new-handle {
-    visibility: hidden;
-}
-
-.react-flow__handle.new-handle:hover, .markdown-node-container:hover ~ .react-flow__handle.new-handle {
-    visibility: visible;
-}
 
 .selected .markdown-node-container {
     border: 3px solid deeppink;

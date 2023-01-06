@@ -1,0 +1,8 @@
+
+.react-flow__handle.new-handle {
+    visibility: hidden;
+}
+
+.react-flow__handle.new-handle:hover, div:not(.react-flow__handle):hover ~ .react-flow__handle.new-handle {
+    visibility: visible;
+}
