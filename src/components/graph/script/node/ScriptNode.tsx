@@ -1,7 +1,6 @@
 import {CustomNodeProps} from "../../customNodeProps";
-import {Ref, RefObject, useCallback} from "react";
+import {RefObject, useCallback} from "react";
 import "./node.css";
-import {NodeHandle} from "../../graphState";
 import {ReflectionApi} from "../../../reflectionApi/ReflectionApi";
 
 export interface ScriptData {
@@ -9,12 +8,12 @@ export interface ScriptData {
   name: string;
   script: string;
   lastRunMillis?: number; // unix timestamp
-  nodeHandles?: NodeHandle[];
 }
 
 export interface ScriptNodeReflectionProps {
   reflectionApi?: RefObject<ReflectionApi>;
 }
+
 export type ScriptNodeProps = CustomNodeProps<ScriptData> & ScriptNodeReflectionProps
 
 export const ScriptContextLibSource = `
@@ -45,21 +44,27 @@ export const ScriptContextLibSource = `
   declare const edges: EdgeTraversal[];
 `
 
+//@ts-ignore
+function ignore(...any: any[]) {
+  return;
+}
+
 export function ScriptNode({
-                              id,
-                              data: {name, language, script, lastRunMillis},
-                              reflectionApi,
+                             id,
+                             data: {name, language, script, lastRunMillis},
+                             reflectionApi,
                            }: ScriptNodeProps) {
 
   const lastRun = lastRunMillis ? new Date(lastRunMillis).toLocaleString() : 'never';
 
   const executeScript = useCallback(() => {
     switch (language) {
-    case 'javascript':
-      const nodeTraversal = reflectionApi?.current?.getNode(id);
-      const node = nodeTraversal?.node;
-      const edges = nodeTraversal?.edges();
-      eval(script);
+      case 'javascript':
+        const nodeTraversal = reflectionApi?.current?.getNode(id);
+        const node = nodeTraversal?.node;
+        const edges = nodeTraversal?.edges();
+        ignore(node, edges);
+        eval(script);
     }
   }, [id, reflectionApi, language, script]);
 

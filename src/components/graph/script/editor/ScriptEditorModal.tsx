@@ -30,8 +30,8 @@ export function ScriptEditorModal({
         <ScriptEditor value={data.script} onChange={newScript => setData({...data, script: newScript})} />
       </div>
       <div className={'actions'}>
-        {onCancel && <button onClick={() => onCancel()}>CANCEL</button>}
-        <button onClick={() => onSave(data)}>SAVE</button>
+        {onCancel && <button className={"cancel-button"} onClick={() => onCancel()}>cancel</button>}
+        <button className={"save-button"} onClick={() => onSave(data)}>save</button>
       </div>
     </div>
   </Modal>;

@@ -4,7 +4,6 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import {MarkdownNode} from "./MarkdownNode";
 import { ReactFlowProvider } from 'react-flow-renderer';
-import {INITIAL_HANDLES} from '../../graphState';
 
 export default {
   /* 👇 The title prop is optional.
@@ -30,7 +29,7 @@ export const ShortText: ComponentStory<typeof MarkdownNode> = () => {
   let content = `
 [PPU](https://google.com/?q=ppu)
 `;
-  return <MarkdownNode id='1' data={ { content: content, nodeHandles: INITIAL_HANDLES } }></MarkdownNode>;
+  return <MarkdownNode id='1' data={ { content: content } }></MarkdownNode>;
 }
 
 
@@ -41,5 +40,5 @@ PPU
 
 PPU (Picture-processing unit) responds for rendering video signal
 `;
-  return <MarkdownNode id='1' data={ { content: content, nodeHandles: INITIAL_HANDLES } }></MarkdownNode>;
+  return <MarkdownNode id='1' data={ { content: content } }></MarkdownNode>;
 }

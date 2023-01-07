@@ -100,7 +100,7 @@ function InternalGraph({graphStorage}: GraphProps) {
     if (mdEditor.node) {
       dispatchGraphAction({
         type: 'update',
-        newData: {content: newContent, nodeHandles: mdEditor.node.data.nodeHandles},
+        newData: {content: newContent},
         nodeId: mdEditor.node?.id
       })
       setMdEditor({});
@@ -189,8 +189,8 @@ function InternalGraph({graphStorage}: GraphProps) {
   const nodeTypes: NodeTypes = useMemo(() => {
     return {
       markdown: MakeConnectable(MarkdownNode),
-      commandPrompt: CommandPromptNodeInteractive,
-      picture: PictureNodeResizable,
+      commandPrompt: MakeConnectable(CommandPromptNodeInteractive),
+      picture: MakeConnectable(PictureNodeResizable),
       script: MakeConnectable(ScriptNodeReflecting),
     }
   }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
@@ -226,7 +226,7 @@ function InternalGraph({graphStorage}: GraphProps) {
         nodeTypes={nodeTypes}
         fitView={true}
         onNodeDoubleClick={onNodeDoubleClick}
-        onClick={(event) => {
+        onClick={() => {
           setContextMenuState(undefined);
         }}
         onDoubleClickCapture={event => {

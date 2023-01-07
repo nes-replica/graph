@@ -7,7 +7,22 @@
 }
 
 .markdown-editor-modal-container > .actions {
+    margin: 0.5rem;
     display: flex;
-    height: 10%;
     justify-content: right;
+}
+
+.save-button {
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    background-color: cornflowerblue;
+    border: 1px solid cornflowerblue;
+    border-radius: 0.5rem;
+}
+
+.cancel-button {
+    font-size: 1.5rem;
+    background-color: transparent;
+    border: 1px solid cornflowerblue;
+    border-radius: 0.5rem;
 }

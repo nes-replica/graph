@@ -1,4 +1,4 @@
-import {GraphStateAction, INITIAL_HANDLES, NodeDataTypeKeys, NodeDataTypeValues} from "./graphState";
+import {GraphStateAction, NodeDataTypeKeys, NodeDataTypeValues} from "./graphState";
 import {XYPosition} from "react-flow-renderer";
 
 export const graphEvents = {
@@ -14,6 +14,6 @@ export const graphEvents = {
   },
 
   createMarkdownNode(position: XYPosition): GraphStateAction {
-    return this.createNode('markdown', {content: '_double click me_', nodeHandles: INITIAL_HANDLES}, position)
+    return this.createNode('markdown', {content: '_double click me_'}, position)
   }
 };

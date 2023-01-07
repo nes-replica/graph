@@ -26,8 +26,8 @@ export function MarkdownEditorModal({
         <MarkdownEditor value={text} onChange={setText}></MarkdownEditor>
       </div>
       <div className={'actions'}>
-        {onCancel && <button onClick={() => onCancel()}>CANCEL</button>}
-        <button onClick={() => onSave(text)}>SAVE</button>
+        {onCancel && <button className={'cancel-button'} onClick={() => onCancel()}>cancel</button>}
+        <button className={'save-button'} onClick={() => onSave(text)}>save</button>
       </div>
     </div>
   </Modal>;

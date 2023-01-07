@@ -1,12 +1,10 @@
 import {Markdown} from "../Markdown";
 import './MarkdownNode.css';
 import {useState} from "react";
-import {NodeHandle} from "../../graphState";
 import {CustomNodeProps} from "../../customNodeProps";
 
 export interface MarkdownData {
   content: string;
-  nodeHandles: NodeHandle[];
 }
 
 export function MarkdownNode({data: {content}}: CustomNodeProps<MarkdownData>) {

@@ -15,7 +15,7 @@ import {PictureData} from "./picture/PictureNode";
 import {ScriptData} from "./script/node/ScriptNode";
 
 export interface GraphState {
-  nodes: Node<NodeDataTypeValues>[];
+  nodes: Node<NodeDataTypeValues & WithHandles>[];
   edges: Edge[];
   uploadingParams?: {
     position: XYPosition
@@ -80,12 +80,16 @@ type NodeDataTypes = {
   'script': ScriptData,
 }
 
+export interface WithHandles {
+  nodeHandles: NodeHandle[]
+}
+
+function isNodeWithHandles(node: Node): node is Node<WithHandles> {
+  return node.data.hasOwnProperty('nodeHandles')
+}
+
 export type NodeDataTypeKeys = keyof NodeDataTypes
 export type NodeDataTypeValues = NodeDataTypes[NodeDataTypeKeys]
-
-function isNodeOfType<T extends keyof NodeDataTypes>(node: Node, type: T): node is Node<NodeDataTypes[T]> {
-  return node.type === type
-}
 
 interface CreateNode {
   type: 'createNode'
@@ -183,7 +187,8 @@ function updateNode(nodes: Node[], id: string, updateFunc: (data: any) => any) {
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
   switch (action.type) {
     case 'loadingSucceed':
-      return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true, nodeCount: action.graph.nodes.length}
+      const nodesWithHandles = action.graph.nodes.map(node => ({...node, data: {...node.data, nodeHandles: INITIAL_HANDLES}}))
+      return {...state, nodes: nodesWithHandles, edges: action.graph.edges, isLoaded: true, nodeCount: action.graph.nodes.length}
     case 'loadingFailed':
       return {...state, isLoaded: true, loadingError: action.error};
     case 'updateCb':
@@ -207,7 +212,7 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       if (isNaN(sourceNumber) || isNaN(targetNumber)) return state;
 
       const updatedNodes = state.nodes.map(node => {
-        if (!isNodeOfType(node, 'markdown')) return node;
+        if (!isNodeWithHandles(node)) return node;
 
         if (node.id === action.connection.source && node.data.nodeHandles !== undefined) {
           const updatedHandles = getUpdatedNodeHandles(node.data.nodeHandles, sourcePosition, sourceNumber)
@@ -234,7 +239,7 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
     case 'createNode':
       const id = state.nodeCount.toString()
       const {type, data, position} = action.node
-      const newNode = {id, type, position, data}
+      const newNode = {id, type, position, data: {...data, nodeHandles: INITIAL_HANDLES }}
 
       const newState = {...state, nodeCount: state.nodeCount + 1, nodes: [...state.nodes, newNode]};
       if (action.afterNewNode) {
