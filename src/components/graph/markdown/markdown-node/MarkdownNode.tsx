@@ -9,7 +9,7 @@ export interface MarkdownData {
 
 export function MarkdownNode({data: {content}}: CustomNodeProps<MarkdownData>) {
 
-  const trimmedContent = content.trim();
+  const trimmedContent = String(content).trim();
   const shortContent = trimmedContent.split("\n", 2)[0];
 
   const alwaysExpanded = shortContent === trimmedContent;
