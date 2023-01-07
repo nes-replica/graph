@@ -12,6 +12,7 @@ import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 import {Graph} from "./graphStorage";
 import {CommandNodeData} from "./command-prompt/CommandPromptNode";
 import {PictureData} from "./picture/PictureNode";
+import {ScriptData} from "./script/node/ScriptNode";
 
 export interface GraphState {
   nodes: Node<NodeDataTypeValues>[];
@@ -76,9 +77,10 @@ type NodeDataTypes = {
   'markdown': MarkdownData,
   'picture': PictureData,
   'commandPrompt': CommandNodeData,
+  'script': ScriptData,
 }
 
-type NodeDataTypeKeys = keyof NodeDataTypes
+export type NodeDataTypeKeys = keyof NodeDataTypes
 export type NodeDataTypeValues = NodeDataTypes[NodeDataTypeKeys]
 
 function isNodeOfType<T extends keyof NodeDataTypes>(node: Node, type: T): node is Node<NodeDataTypes[T]> {
@@ -181,7 +183,7 @@ function updateNode(nodes: Node[], id: string, updateFunc: (data: any) => any) {
 export function graphStateReduce(state: GraphState, action: GraphStateAction): GraphState {
   switch (action.type) {
     case 'loadingSucceed':
-      return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true};
+      return {...state, nodes: action.graph.nodes, edges: action.graph.edges, isLoaded: true, nodeCount: action.graph.nodes.length}
     case 'loadingFailed':
       return {...state, isLoaded: true, loadingError: action.error};
     case 'updateCb':

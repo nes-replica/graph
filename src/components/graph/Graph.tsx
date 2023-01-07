@@ -16,7 +16,7 @@ import {
 } from "react";
 import {MarkdownData, MarkdownNode} from "./markdown/markdown-node/MarkdownNode";
 import {MarkdownEditorModal} from "./markdown/markdown-editor/MarkdownEditorModal";
-import {graphStateReduce, INITIAL_HANDLES} from "./graphState";
+import {graphStateReduce} from "./graphState";
 import {GraphStorage} from "./graphStorage";
 import {CommandNodeData, CommandPromptNode, makeCommandNodeInteractionProps} from "./command-prompt/CommandPromptNode";
 import {NodeTypes} from "react-flow-renderer/dist/esm/types";
@@ -25,9 +25,24 @@ import {DropEvent, FileRejection, useDropzone} from 'react-dropzone';
 import {handleDropzoneFile} from "./dropzoneHandler";
 import {sampleGraph} from "./sampleData";
 import {CustomNodeProps} from "./customNodeProps";
+import {ScriptData, ScriptNode} from "./script/node/ScriptNode";
+import './Graph.css';
+import {graphEvents} from "./graphEvents";
+import {ScriptEditorModal} from "./script/editor/ScriptEditorModal";
+import {MakeConnectable} from "./connectable-trait/connectable";
+import {buildReflectionApi, ReflectionApi} from "../reflectionApi/ReflectionApi";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
+}
+
+interface ScriptNodeEditorState {
+  node?: Node<ScriptData>;
+}
+
+interface ContextMenuState {
+  x: number;
+  y: number;
 }
 
 function InternalGraph({graphStorage}: GraphProps) {
@@ -38,8 +53,16 @@ function InternalGraph({graphStorage}: GraphProps) {
     ...sampleGraph,
     draggingEdgeNow: false,
     isLoaded: false,
-    nodeCount: 0
-  })
+    nodeCount: sampleGraph.nodes.length
+  });
+
+  const reflectionApi = useRef<ReflectionApi>(buildReflectionApi([], []));
+  // update reflectionApi ref when graph changes
+  useEffect(() => {
+    reflectionApi.current = buildReflectionApi(graph.nodes, graph.edges);
+  }, [graph.nodes, graph.edges]);
+
+  const [contextMenuState, setContextMenuState] = useState<ContextMenuState | undefined>();
 
   useEffect(() => {
     graphStorage.get()
@@ -60,11 +83,13 @@ function InternalGraph({graphStorage}: GraphProps) {
 
 
   const [mdEditor, setMdEditor] = useState<MdNodeEditorState>({});
+  const [scriptEditor, setScriptEditor] = useState<ScriptNodeEditorState>({});
 
-  function onNodeDoubleClick(event: ReactMouseEvent, node: Node<MarkdownData>) {
-    setMdEditor({
-      node: node,
-    });
+  function onNodeDoubleClick(event: ReactMouseEvent, node: Node) {
+    switch (node.type) {
+      case 'markdown': setMdEditor({node: node}); break;
+      case 'script': setScriptEditor({node: node}); break;
+    }
   }
 
   function onCancelMarkdownEditor() {
@@ -82,6 +107,23 @@ function InternalGraph({graphStorage}: GraphProps) {
     } else {
       console.warn("WARN impossible state: onSaveMarkdownEditor called without node set")
     }
+  }
+
+  function onSaveScriptEditor(newScriptData: ScriptData) {
+    if (scriptEditor.node) {
+      dispatchGraphAction({
+        type: 'update',
+        newData: newScriptData,
+        nodeId: scriptEditor.node?.id
+      })
+      setScriptEditor({});
+    } else {
+      console.warn("WARN impossible state: onSaveScriptEditor called without node set")
+    }
+  }
+
+  function onCancelScriptEditor() {
+    setScriptEditor({});
   }
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[], event: DropEvent) => {
@@ -140,13 +182,33 @@ function InternalGraph({graphStorage}: GraphProps) {
     return CommandPromptNode({...props, ...interactionProps})
   }, [activePrompt, dispatchGraphAction])
 
+  const ScriptNodeReflecting = useCallback((props: CustomNodeProps<ScriptData>) => {
+    return ScriptNode({...props, reflectionApi})
+  }, [])
+
   const nodeTypes: NodeTypes = useMemo(() => {
     return {
-      markdown: MarkdownNode,
+      markdown: MakeConnectable(MarkdownNode),
       commandPrompt: CommandPromptNodeInteractive,
       picture: PictureNodeResizable,
+      script: MakeConnectable(ScriptNodeReflecting),
     }
-  }, [CommandPromptNodeInteractive])
+  }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
+
+  const contextMenuItems = useMemo(() => ({
+    'Markdown node': () => {
+      if (!contextMenuState) return;
+      dispatchGraphAction(graphEvents.createMarkdownNode(project({x: contextMenuState.x, y: contextMenuState.y})));
+    },
+    'Script node': () => {
+      if (!contextMenuState) return;
+      dispatchGraphAction(graphEvents.createNode('script', {
+        language: 'javascript',
+        name: 'untitled script',
+        script: '',
+      }, project({x: contextMenuState.x, y: contextMenuState.y})));
+    },
+  }), [project, contextMenuState])
 
   return (
     <>
@@ -164,25 +226,45 @@ function InternalGraph({graphStorage}: GraphProps) {
         nodeTypes={nodeTypes}
         fitView={true}
         onNodeDoubleClick={onNodeDoubleClick}
+        onClick={(event) => {
+          setContextMenuState(undefined);
+        }}
         onDoubleClickCapture={event => {
+          setContextMenuState(undefined);
           if (reactFlowRef.current && event.target instanceof Element) {
             const targetIsPane = event.target.classList.contains('react-flow__pane');
             if (targetIsPane) {
               const {top, left} = reactFlowRef.current.getBoundingClientRect();
-              dispatchGraphAction({
-                type: 'createNode',
-                node: {
-                  type: 'markdown',
-                  data: {content: '_double click me_', nodeHandles: INITIAL_HANDLES},
-                  position: project({x: event.clientX - left, y: event.clientY - top})
-                }
-              })
+              const position = project({x: event.clientX - left, y: event.clientY - top});
+              dispatchGraphAction(graphEvents.createMarkdownNode(position))
             }
           }
+        }}
+        onContextMenu={event => {
+          if (reactFlowRef.current && event.target instanceof Element) {
+            const targetIsPane = event.target.classList.contains('react-flow__pane');
+            if (targetIsPane) {
+              setContextMenuState({x: event.clientX, y: event.clientY})
+            }
+          }
+          event.preventDefault();
         }}
         deleteKeyCode={'Delete'}
         connectionMode={ConnectionMode.Loose}
       >
+        {contextMenuState && (
+          <div className={'context-menu'} style={{
+            position: 'absolute',
+            top: contextMenuState.y,
+            left: contextMenuState.x,
+          }}>
+            {Object.entries(contextMenuItems).map(([label, onClick]) => (
+              <div className={'item'} key={label} onClick={onClick}>
+                {label}
+              </div>
+            ))}
+          </div>
+        )}
         <MiniMap/>
         <Controls/>
         <input {...getDropzoneFileInputProps()}/>
@@ -191,6 +273,11 @@ function InternalGraph({graphStorage}: GraphProps) {
         mdEditor.node && <MarkdownEditorModal originalText={mdEditor.node?.data.content || ''}
                                               onSave={onSaveMarkdownEditor} onCancel={onCancelMarkdownEditor}
                                               isOpen={true}/>
+      }
+      {
+        scriptEditor.node && <ScriptEditorModal scriptData={scriptEditor.node.data}
+                                                onSave={onSaveScriptEditor} onCancel={onCancelScriptEditor}
+                                                isOpen={true}/>
       }
     </>
   );
