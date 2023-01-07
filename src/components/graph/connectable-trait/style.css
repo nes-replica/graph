@@ -6,3 +6,15 @@
 .react-flow__handle.new-handle:hover, div:not(.react-flow__handle):hover ~ .react-flow__handle.new-handle {
     visibility: visible;
 }
+
+/* first child of a node*/
+.react-flow__node > div:first-child::before  {
+    content: '';
+    position: absolute;
+    box-sizing: border-box;
+    width: 150%;
+    height: 150%;
+    top: -25%;
+    left: -25%;
+    z-index: -1;
+}
