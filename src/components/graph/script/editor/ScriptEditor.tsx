@@ -1,5 +1,6 @@
 
 import Editor from "@monaco-editor/react";
+import {ScriptContextLibSource} from "../node/ScriptNode";
 
 interface ScriptEditorProps {
   value: string;
@@ -15,6 +16,9 @@ export function ScriptEditor(props: ScriptEditorProps) {
               if (newValue) {
                 props.onChange(newValue)
               }
+            }}
+            beforeMount={(monaco) => {
+              monaco.languages.typescript.javascriptDefaults.addExtraLib(ScriptContextLibSource, 'ts:script-context-lib.d.ts');
             }}
           />
 }

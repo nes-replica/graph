@@ -17,6 +17,34 @@ export interface ScriptNodeReflectionProps {
 }
 export type ScriptNodeProps = CustomNodeProps<ScriptData> & ScriptNodeReflectionProps
 
+export const ScriptContextLibSource = `
+  declare interface Node {
+    id: string;
+    data: any;
+    type: string;
+    position: { x: number; y: number; };
+  };
+  declare interface Edge {
+    id: string;
+    source: string;
+    target: string;
+    data: any;
+  };
+  declare interface NodeTraversal {
+    node: Node;
+    edges(): EdgeTraversal[];
+  };
+  declare interface EdgeTraversal {
+    edge: Edge;
+    direction: "in" | "out";
+    node: NodeTraversal;
+  };
+  /** current node (script node) */
+  declare const node: Node;
+  /** edges from current node */
+  declare const edges: EdgeTraversal[];
+`
+
 export function ScriptNode({
                               id,
                               data: {name, language, script, lastRunMillis},
