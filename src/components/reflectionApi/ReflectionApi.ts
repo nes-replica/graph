@@ -1,6 +1,48 @@
 import {Node, Edge, getIncomers, getOutgoers} from "react-flow-renderer";
 import {CreateNode, NodeDataTypeKeys, NodeDataTypeValues, UpdateNodeData} from "~/components/graph/graphState";
 import {XYPosition} from "react-flow-renderer";
+import {z, ZodType} from "zod";
+
+function validateData(type: NodeDataTypeKeys, data: any): NodeDataTypeValues | undefined {
+  const schema = NODE_DATA_SCHEMAS[type];
+  const parsedResult = schema.safeParse(data);
+  if (!parsedResult.success) {
+    window.alert(`Node data is not valid: '${parsedResult.error}'`);
+    console.error(parsedResult.error);
+    return undefined;
+  }
+
+  return parsedResult.data
+}
+
+const NODE_DATA_SCHEMAS: Record<NodeDataTypeKeys, ZodType<NodeDataTypeValues>> = {
+  'markdown': z.object({content: z.string()}),
+  'picture': z.object({
+    picture_url: z.string(),
+    description: z.string().optional(),
+    preview: z.object({
+      width: z.number(),
+      height: z.number()
+    })
+  }),
+  'commandPrompt': z.object({command: z.string()}),
+  'script': z.object({language: z.literal('javascript'), name: z.string(), script: z.string()}),
+  'generic': z.object({content: z.any()})
+}
+
+const NODE_TYPE_SCHEMA: ZodType<NodeDataTypeKeys> =
+  z.literal('markdown')
+    .or(z.literal('picture'))
+    .or(z.literal('commandPrompt'))
+    .or(z.literal('script'))
+    .or(z.literal('generic'));
+
+const NODE_ID_SCHEMA = z.string();
+
+const POSITION_SCHEMA = z.object({
+  x: z.number(),
+  y: z.number()
+})
 
 export interface GraphNode {
   id: string;
@@ -17,6 +59,7 @@ export interface GraphNodeConnection {
 
 export interface GraphApi {
   get(id: string): GraphNode | undefined;
+
   create(type: NodeDataTypeKeys, data: NodeDataTypeValues, position: XYPosition): void;
 }
 
@@ -29,7 +72,10 @@ export function buildGraphApi(
     return {
       id: node.id,
       update: (data: any) => {
-        dispatchAction({type: 'update', nodeId: node.id, newData: data});
+        const validatedData = validateData(node.type as NodeDataTypeKeys, data);
+        if (validatedData) {
+          dispatchAction({type: 'update', nodeId: node.id, newData: validatedData});
+        }
       },
       connected(): GraphNodeConnection {
         const incomers = getIncomers(node, nodes, edges).map(n => createGraphNode(n));
@@ -55,10 +101,30 @@ export function buildGraphApi(
   const createNode = (type: NodeDataTypeKeys,
                       data: NodeDataTypeValues,
                       position: XYPosition) => {
+    const validatedType = NODE_TYPE_SCHEMA.safeParse(type);
+    if (!validatedType.success) {
+      window.alert(`Node type: '${type}' is not valid.\nExpected: 'markdown', 'picture', 'commandPrompt', 'generic' or 'script'`);
+      return;
+    }
+    const validatedData = validateData(validatedType.data, data);
+    if (validatedData === undefined) {
+      return;
+    }
+    const validatedPosition = POSITION_SCHEMA.safeParse(position);
+    if (!validatedPosition.success) {
+      window.alert(`Node position is not valid: '${validatedPosition.error}`);
+      return;
+    }
+
     dispatchAction({type: 'createNode', node: {type, data, position}});
   }
 
   const getNode = (id: string): GraphNode | undefined => {
+    const validatedId = NODE_ID_SCHEMA.safeParse(id);
+    if (!validatedId.success) {
+      window.alert(`Node id: '${id}' is not valid. Should be a string`);
+      return;
+    }
     for (const node of nodes) {
       if (node.id === id) {
         return createGraphNode(node);

@@ -15,5 +15,9 @@ export const graphEvents = {
 
   createMarkdownNode(position: XYPosition): GraphStateAction {
     return this.createNode('markdown', {content: '_double click me_'}, position)
-  }
+  },
+
+  createGenericNode(position: XYPosition): GraphStateAction {
+    return this.createNode('generic', {}, position)
+  },
 };
