@@ -49,7 +49,7 @@ export const EditableEdge: FC<EditableProps> = ({
     <>
       <path id={id} className="react-flow__edge-path" d={edgePath}
             markerEnd={markerEnd}
-            markerStart={markerStart}/>
+            markerStart={markerStart} />
       <path
         d={edgePath}
         fill="none"

@@ -231,6 +231,22 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
         return state;
       }
 
+      if (action.connection.targetHandle === 'easy') {
+        const sourceNode = state.nodes.find(node => node.id === action.connection.source);
+        const targetNode = state.nodes.find(node => node.id === action.connection.target);
+        if (!sourceNode || !targetNode) {
+          return state;
+        } else {
+          const xDiff = sourceNode.position.x - targetNode.position.x;
+          const yDiff = sourceNode.position.y - targetNode.position.y;
+          if (Math.abs(xDiff) > Math.abs(yDiff)) {
+            action.connection.targetHandle = xDiff < 0 ? 'left-handle-0' : 'right-handle-0';
+          } else {
+            action.connection.targetHandle = yDiff < 0 ? 'top-handle-0' : 'bottom-handle-0';
+          }
+        }
+      }
+
       const [sourcePosition, , rawSourceNumber] = action.connection.sourceHandle.split('-')
       const [targetPosition, , rawTargetNumber] = action.connection.targetHandle.split('-')
 

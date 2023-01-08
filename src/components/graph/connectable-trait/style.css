@@ -18,3 +18,18 @@
     left: -25%;
     z-index: -1;
 }
+
+.new-handle.easy {
+    transform: unset;
+    width: 90%;
+    height: 90%;
+    top: 5%;
+    left: 5%;
+    border-radius: 0;
+    background: none;
+    z-index: -1;
+}
+
+.new-handle.easy.target {
+    z-index: 100;
+}
