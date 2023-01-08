@@ -9,21 +9,23 @@ export type EditableProps = EdgeProps & {
 }
 
 export const EditableEdge: FC<EditableProps> = ({
-                                              id,
-                                              sourceX,
-                                              sourceY,
-                                              targetX,
-                                              targetY,
-                                              sourcePosition,
-                                              targetPosition,
-                                              data,
-                                              label,
-                                              interactionWidth,
-                                              onLabelUpdate,
-                                              onLabelStartEditing,
-                                              inEditMode,
-  selected,
-                                            }) => {
+                                                  id,
+                                                  sourceX,
+                                                  sourceY,
+                                                  targetX,
+                                                  targetY,
+                                                  sourcePosition,
+                                                  targetPosition,
+                                                  data,
+                                                  label,
+                                                  interactionWidth,
+                                                  onLabelUpdate,
+                                                  onLabelStartEditing,
+                                                  inEditMode,
+                                                  selected,
+                                                  markerEnd,
+                                                  markerStart
+                                                }) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -45,17 +47,19 @@ export const EditableEdge: FC<EditableProps> = ({
 
   return (
     <>
-      <path id={id} className="react-flow__edge-path" d={edgePath}/>
+      <path id={id} className="react-flow__edge-path" d={edgePath}
+            markerEnd={markerEnd}
+            markerStart={markerStart}/>
       <path
-          d={edgePath}
-          fill="none"
-          strokeOpacity={0}
-          strokeWidth={interactionWidth}
-          className="react-flow__edge-interaction"
-          style={{pointerEvents: 'all', cursor: 'pointer'}}
-          onDoubleClickCapture={() => {
-            onLabelStartEditing(id);
-          }}
+        d={edgePath}
+        fill="none"
+        strokeOpacity={0}
+        strokeWidth={interactionWidth}
+        className="react-flow__edge-interaction"
+        style={{pointerEvents: 'all', cursor: 'pointer'}}
+        onDoubleClickCapture={() => {
+          onLabelStartEditing(id);
+        }}
       />
       {(inEditMode) ? (
         <EdgeLabelRenderer>
@@ -63,8 +67,8 @@ export const EditableEdge: FC<EditableProps> = ({
             style={labelPositionStyle}
             className="nodrag nopan"
             value={editValue} onChange={(e) => {
-              setEditValue(e.target.value);
-            }}
+            setEditValue(e.target.value);
+          }}
             autoFocus={true}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -77,21 +81,21 @@ export const EditableEdge: FC<EditableProps> = ({
             }}
           />
         </EdgeLabelRenderer>
-        ) : (
-          labelText && <EdgeLabelRenderer>
-              <div
-                  style={labelPositionStyle}
-                  className="label nodrag nopan"
-                  onDoubleClickCapture={(e) => {
-                    onLabelStartEditing(id);
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-              >
-                {labelText}
-              </div>
-          </EdgeLabelRenderer>
-        )
+      ) : (
+        labelText && <EdgeLabelRenderer>
+            <div
+                style={labelPositionStyle}
+                className={"label nodrag nopan" + (selected ? " selected" : "")}
+                onDoubleClickCapture={(e) => {
+                  onLabelStartEditing(id);
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+            >
+              {labelText}
+            </div>
+        </EdgeLabelRenderer>
+      )
       }
     </>
   );

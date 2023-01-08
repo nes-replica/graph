@@ -11,6 +11,11 @@
     cursor: pointer;
 }
 
+.react-flow__edgelabel-renderer .label.selected {
+    background: #46c97c;
+    border: 2px solid #15462b;
+}
+
 .react-flow__edgelabel-renderer .input {
     position: absolute;
     pointer-events: all;
