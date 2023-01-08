@@ -42,6 +42,12 @@ interface UpdateNodeWithCallback {
   updateFunc: (data: any) => any;
 }
 
+interface UpdateEdgeLabel {
+  type: "edgeLabelUpdate";
+  edgeId: string;
+  newLabel: string;
+}
+
 interface RFNodeChange {
   type: 'rfNodeChange'
   changes: NodeChange[]
@@ -135,7 +141,7 @@ export type PictureUploadAction = PictureUploadStart | PictureUploadProgress | P
 
 export type GraphStateAction =
   UpdateNodeData | UpdateNodeWithCallback | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart |
-  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed | PictureUploadAction;
+  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed | PictureUploadAction | UpdateEdgeLabel;
 
 function isConnectionPosition(value: string): value is ConnectionPosition {
   return ['top', 'bottom', 'left', 'right'].includes(value);
@@ -255,6 +261,16 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       }
 
       return {...state, nodes: updatedNodes, edges: addEdge(edge, state.edges)};
+    case 'edgeLabelUpdate':
+      const newEdges = state.edges.map(edge => {
+        if (edge.id === action.edgeId) {
+          const newEdge = {...edge, label: action.newLabel};
+          console.log("found it", edge, newEdge, action.newLabel);
+          return newEdge
+        }
+        return edge;
+      });
+      return {...state, edges: newEdges};
     case 'rfEdgeUpdateStart':
       return {...state, draggingEdgeNow: true};
     case 'rfEdgeUpdate':

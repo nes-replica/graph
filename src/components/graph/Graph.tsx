@@ -1,6 +1,6 @@
 import ReactFlow, {
   ConnectionMode,
-  Controls,
+  Controls, EdgeProps, EdgeTypes,
   MiniMap,
   Node, NodeTypes,
   ReactFlowProvider, useKeyPress,
@@ -33,6 +33,7 @@ import {buildGraphApi, buildReflectionApi, GraphApi, ReflectionApi} from "../ref
 import {GenericData, GenericNode} from "./generic/GenericNode";
 import {GenericEditorModal} from "./generic/GenericNodeModal";
 import 'reactflow/dist/style.css';
+import {EditableEdge} from "./editable-edge/EditableEdge";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -226,6 +227,27 @@ function InternalGraph({graphStorage}: GraphProps) {
     }
   }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
 
+  const [edgeEdited, setEdgeEdited] = useState<string | undefined>();
+
+  const EditableEdgeInteractive = useCallback((props: EdgeProps) => {
+    const onLabelUpdate = (id: string, newLabel: string) => {
+      dispatchGraphAction(graphEvents.updateEdgeLabel(props.id, newLabel));
+      setEdgeEdited(undefined);
+    }
+    const onLabelStartEditing = () => {
+      setEdgeEdited(props.id);
+    }
+    const inEditMode = props.id === edgeEdited;
+    return EditableEdge({...props, onLabelStartEditing, onLabelUpdate, inEditMode})
+  }, [edgeEdited, dispatchGraphAction]);
+
+  const edgeTypes: EdgeTypes = useMemo(() => {
+    return {
+      default: EditableEdgeInteractive,
+      'smoothstep': EditableEdgeInteractive,
+    }
+  }, [EditableEdgeInteractive]);
+
   const contextMenuItems = useMemo(() => ({
     'Markdown node': () => {
       if (!contextMenuState) return;
@@ -245,13 +267,17 @@ function InternalGraph({graphStorage}: GraphProps) {
     },
   }), [project, contextMenuState])
 
+  const cancelInteractions = useCallback(() => {
+    setEdgeEdited(undefined);
+    setContextMenuState(undefined);
+  }, []);
+
   return (
     <>
       <ReactFlow
         {...getDropzoneRootProps()}
         ref={reactFlowRef}
         nodes={graph.nodes} edges={graph.edges}
-        onSelectCapture={console.log}
         onNodesChange={changes => dispatchGraphAction({type: 'rfNodeChange', changes})}
         onEdgesChange={changes => dispatchGraphAction({type: 'rfEdgeChange', changes})}
         onConnect={connection => dispatchGraphAction({type: 'rfConnect', connection})}
@@ -259,10 +285,11 @@ function InternalGraph({graphStorage}: GraphProps) {
         onEdgeUpdate={(oldEdge, newConnection) => dispatchGraphAction({type: 'rfEdgeUpdate', oldEdge, newConnection})}
         onEdgeUpdateEnd={(_, edge) => dispatchGraphAction({type: 'rfEdgeUpdateEnd', edge})}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView={true}
         onNodeDoubleClick={onNodeDoubleClick}
-        onClick={() => setContextMenuState(undefined)}
-        onDoubleClickCapture={() => setContextMenuState(undefined)}
+        onClick={() => cancelInteractions()}
+        onDoubleClickCapture={() => cancelInteractions()}
         onContextMenu={event => {
           if (reactFlowRef.current && event.target instanceof Element) {
             const targetIsPane = event.target.classList.contains('react-flow__pane');

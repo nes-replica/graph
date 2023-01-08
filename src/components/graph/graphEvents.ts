@@ -20,4 +20,12 @@ export const graphEvents = {
   createGenericNode(position: XYPosition): GraphStateAction {
     return this.createNode('generic', {}, position)
   },
+
+  updateEdgeLabel(id: string, newLabel: string): GraphStateAction {
+    return {
+      type: 'edgeLabelUpdate',
+      edgeId: id,
+      newLabel: newLabel,
+    }
+  },
 };
