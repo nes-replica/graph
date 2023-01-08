@@ -1,7 +1,8 @@
-import {ConnectionPosition, INITIAL_HANDLES, NodeHandle} from "../graphState";
+import {ConnectionPosition, NodeHandle, WithHandles} from "../graphState";
 import {Handle, Position, useUpdateNodeInternals} from "react-flow-renderer";
 import {useEffect} from "react";
 import "./style.css";
+import {CustomNodeProps} from "~/components/graph/customNodeProps";
 
 function toRFPosition(connPosition: ConnectionPosition) {
   switch (connPosition) {
@@ -37,8 +38,7 @@ function makeHandle(id: string, position: ConnectionPosition, indexInRow: number
   />
 }
 
-function makeHandles(handles?: NodeHandle[]) {
-  handles = handles || INITIAL_HANDLES;
+function makeHandles(handles: NodeHandle[]) {
   const topHandleRow = handles.filter(h => h.position === 'top');
   const topHandleRowRendered = topHandleRow.map((handle, index) => {
     return makeHandle(handle.id, handle.position, index, topHandleRow.length);
@@ -62,19 +62,11 @@ function makeHandles(handles?: NodeHandle[]) {
   return [...topHandleRowRendered, ...bottomHandleRowRendered, ...leftHandleRowRendered, ...rightHandleRowRendered]
 }
 
+type UnderlyingConstructor<Props> = (props: CustomNodeProps<Props>) => JSX.Element;
 
-export interface ConnectableProps {
-  id: string;
-  data: {
-    nodeHandles?: NodeHandle[]
-  }
-}
+export function MakeConnectable<Props, PropsConn extends Props & WithHandles>(underlying: UnderlyingConstructor<Props>) {
 
-type UnderlyingConstructor<Props extends ConnectableProps> = (props: Props) => JSX.Element;
-
-export function MakeConnectable<Props extends ConnectableProps>(underlying: UnderlyingConstructor<Props>) {
-
-  function ConnectableNode(props: Props) {
+  function ConnectableNode(props: CustomNodeProps<PropsConn>) {
     const {id, data: {nodeHandles}} = props;
     const updateNodeInternals = useUpdateNodeInternals();
 

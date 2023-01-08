@@ -1,17 +1,15 @@
 import {Markdown} from "../Markdown";
 import './MarkdownNode.css';
 import {useState} from "react";
-import {NodeHandle} from "../../graphState";
 import {CustomNodeProps} from "../../customNodeProps";
 
 export interface MarkdownData {
   content: string;
-  nodeHandles: NodeHandle[];
 }
 
 export function MarkdownNode({data: {content}}: CustomNodeProps<MarkdownData>) {
 
-  const trimmedContent = content.trim();
+  const trimmedContent = String(content).trim();
   const shortContent = trimmedContent.split("\n", 2)[0];
 
   const alwaysExpanded = shortContent === trimmedContent;

@@ -30,7 +30,7 @@ import './Graph.css';
 import {graphEvents} from "./graphEvents";
 import {ScriptEditorModal} from "./script/editor/ScriptEditorModal";
 import {MakeConnectable} from "./connectable-trait/connectable";
-import {buildReflectionApi, ReflectionApi} from "../reflectionApi/ReflectionApi";
+import {buildGraphApi, buildReflectionApi, GraphApi, ReflectionApi} from "../reflectionApi/ReflectionApi";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -62,6 +62,12 @@ function InternalGraph({graphStorage}: GraphProps) {
     reflectionApi.current = buildReflectionApi(graph.nodes, graph.edges);
   }, [graph.nodes, graph.edges]);
 
+  const graphApi = useRef<GraphApi>(buildGraphApi(dispatchGraphAction, [], []));
+  // update graphApi ref when graph changes
+  useEffect(() => {
+    graphApi.current = buildGraphApi(dispatchGraphAction, graph.nodes, graph.edges);
+  }, [graph.nodes, graph.edges]);
+
   const [contextMenuState, setContextMenuState] = useState<ContextMenuState | undefined>();
 
   useEffect(() => {
@@ -76,7 +82,6 @@ function InternalGraph({graphStorage}: GraphProps) {
   useEffect(() => {
     if (graph.isLoaded) {
       graphStorage.save(graph).then(() => {
-        console.log("saved to storage", graph);
       }, console.error);
     }
   }, [graph, graphStorage]);
@@ -100,7 +105,7 @@ function InternalGraph({graphStorage}: GraphProps) {
     if (mdEditor.node) {
       dispatchGraphAction({
         type: 'update',
-        newData: {content: newContent, nodeHandles: mdEditor.node.data.nodeHandles},
+        newData: {content: newContent},
         nodeId: mdEditor.node?.id
       })
       setMdEditor({});
@@ -183,14 +188,14 @@ function InternalGraph({graphStorage}: GraphProps) {
   }, [activePrompt, dispatchGraphAction])
 
   const ScriptNodeReflecting = useCallback((props: CustomNodeProps<ScriptData>) => {
-    return ScriptNode({...props, reflectionApi})
+    return ScriptNode({...props, reflectionApi, graphApi})
   }, [])
 
   const nodeTypes: NodeTypes = useMemo(() => {
     return {
       markdown: MakeConnectable(MarkdownNode),
-      commandPrompt: CommandPromptNodeInteractive,
-      picture: PictureNodeResizable,
+      commandPrompt: MakeConnectable(CommandPromptNodeInteractive),
+      picture: MakeConnectable(PictureNodeResizable),
       script: MakeConnectable(ScriptNodeReflecting),
     }
   }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
@@ -226,7 +231,7 @@ function InternalGraph({graphStorage}: GraphProps) {
         nodeTypes={nodeTypes}
         fitView={true}
         onNodeDoubleClick={onNodeDoubleClick}
-        onClick={(event) => {
+        onClick={() => {
           setContextMenuState(undefined);
         }}
         onDoubleClickCapture={event => {

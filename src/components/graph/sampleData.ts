@@ -1,8 +1,8 @@
 import {Edge, Node} from "react-flow-renderer";
 import {MarkdownData} from "./markdown/markdown-node/MarkdownNode";
-import {INITIAL_HANDLES} from "./graphState";
+import {INITIAL_HANDLES, WithHandles} from "./graphState";
 
-const initialNodes: Node<MarkdownData>[] = [
+const initialNodes: Node<MarkdownData & WithHandles>[] = [
   {
     id: '1',
     type: 'markdown',
