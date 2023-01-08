@@ -5,7 +5,7 @@ import {XYPosition} from "react-flow-renderer";
 export interface GraphNode {
   id: string;
   update(data: any): void;
-  connected(id: string): GraphNodeConnection;
+  connected(): GraphNodeConnection;
   data(): any;
   send(connection: string, data: any): void
 }
