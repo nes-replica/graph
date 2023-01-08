@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import { ReactFlowProvider } from 'react-flow-renderer';
+import { ReactFlowProvider } from 'reactflow';
 import {ScriptData, ScriptNode} from "./ScriptNode";
 
 export default {

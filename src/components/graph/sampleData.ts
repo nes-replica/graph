@@ -1,4 +1,4 @@
-import {Edge, Node} from "react-flow-renderer";
+import {Edge, Node} from "reactflow";
 import {MarkdownData} from "./markdown/markdown-node/MarkdownNode";
 import {INITIAL_HANDLES, WithHandles} from "./graphState";
 

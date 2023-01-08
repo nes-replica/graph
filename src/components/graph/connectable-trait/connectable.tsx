@@ -1,5 +1,5 @@
 import {ConnectionPosition, NodeHandle, WithHandles} from "../graphState";
-import {Handle, Position, useUpdateNodeInternals} from "react-flow-renderer";
+import {Handle, Position, useUpdateNodeInternals} from "reactflow";
 import {useEffect} from "react";
 import "./style.css";
 import {CustomNodeProps} from "~/components/graph/customNodeProps";

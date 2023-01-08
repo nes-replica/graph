@@ -7,11 +7,11 @@ import {
   EdgeChange,
   MarkerType,
   Node,
+  NodeChange,
   updateEdge,
   XYPosition
-} from "react-flow-renderer";
+} from "reactflow";
 import {MarkdownData} from "./markdown/markdown-node/MarkdownNode";
-import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 import {Graph} from "./graphStorage";
 import {CommandNodeData} from "./command-prompt/CommandPromptNode";
 import {PictureData} from "./picture/PictureNode";

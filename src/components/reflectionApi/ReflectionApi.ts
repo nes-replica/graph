@@ -1,6 +1,6 @@
-import {Node, Edge, getIncomers, getOutgoers} from "react-flow-renderer";
+import {Node, Edge, getIncomers, getOutgoers} from "reactflow";
 import {CreateNode, NodeDataTypeKeys, NodeDataTypeValues, UpdateNodeData} from "~/components/graph/graphState";
-import {XYPosition} from "react-flow-renderer";
+import {XYPosition} from "reactflow";
 import {z, ZodType} from "zod";
 
 function validateData(type: NodeDataTypeKeys, data: any): NodeDataTypeValues | undefined {

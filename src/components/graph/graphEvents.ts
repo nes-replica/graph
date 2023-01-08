@@ -1,5 +1,5 @@
 import {GraphStateAction, NodeDataTypeKeys, NodeDataTypeValues} from "./graphState";
-import {XYPosition} from "react-flow-renderer";
+import {XYPosition} from "reactflow";
 
 export const graphEvents = {
   createNode(type: NodeDataTypeKeys, data: NodeDataTypeValues, position: XYPosition): GraphStateAction {

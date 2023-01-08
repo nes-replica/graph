@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 
 import {ComponentStory, ComponentMeta} from '@storybook/react';
 
-import {ReactFlowProvider} from 'react-flow-renderer';
+import {ReactFlowProvider} from 'reactflow';
 import {PictureNode} from "./PictureNode";
 
 // import testImage from "../../../public/test.jpg";

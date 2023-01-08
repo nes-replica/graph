@@ -2,10 +2,10 @@ import ReactFlow, {
   ConnectionMode,
   Controls,
   MiniMap,
-  Node,
+  Node, NodeTypes,
   ReactFlowProvider, useKeyPress,
   useReactFlow
-} from 'react-flow-renderer';
+} from 'reactflow';
 import {
   MouseEvent as ReactMouseEvent, useCallback,
   useEffect,
@@ -19,7 +19,6 @@ import {MarkdownEditorModal} from "./markdown/markdown-editor/MarkdownEditorModa
 import {graphStateReduce} from "./graphState";
 import {GraphStorage} from "./graphStorage";
 import {CommandNodeData, CommandPromptNode, makeCommandNodeInteractionProps} from "./command-prompt/CommandPromptNode";
-import {NodeTypes} from "react-flow-renderer/dist/esm/types";
 import {OnNodeResize, PictureNode, PictureNodeProps} from "./picture/PictureNode";
 import {DropEvent, FileRejection, useDropzone} from 'react-dropzone';
 import {handleDropzoneFile} from "./dropzoneHandler";
@@ -33,6 +32,7 @@ import {MakeConnectable} from "./connectable-trait/connectable";
 import {buildGraphApi, buildReflectionApi, GraphApi, ReflectionApi} from "../reflectionApi/ReflectionApi";
 import {GenericData, GenericNode} from "./generic/GenericNode";
 import {GenericEditorModal} from "./generic/GenericNodeModal";
+import 'reactflow/dist/style.css';
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
