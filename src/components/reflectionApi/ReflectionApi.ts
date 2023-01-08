@@ -34,7 +34,8 @@ const NODE_TYPE_SCHEMA: ZodType<NodeDataTypeKeys> =
   z.literal('markdown')
     .or(z.literal('picture'))
     .or(z.literal('commandPrompt'))
-    .or(z.literal('script'));
+    .or(z.literal('script'))
+    .or(z.literal('generic'));
 
 const NODE_ID_SCHEMA = z.string();
 
@@ -72,7 +73,9 @@ export function buildGraphApi(
       id: node.id,
       update: (data: any) => {
         const validatedData = validateData(node.type as NodeDataTypeKeys, data);
-        dispatchAction({type: 'update', nodeId: node.id, newData: validatedData});
+        if (validatedData) {
+          dispatchAction({type: 'update', nodeId: node.id, newData: validatedData});
+        }
       },
       connected(): GraphNodeConnection {
         const incomers = getIncomers(node, nodes, edges).map(n => createGraphNode(n));
