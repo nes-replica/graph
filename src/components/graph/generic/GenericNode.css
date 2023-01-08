@@ -1,0 +1,23 @@
+.generic-node-container {
+    border: 1px solid purple;
+    border-radius: 3px;
+    padding-bottom: 25px;
+    padding-right: 40px;
+}
+
+
+.selected .generic-node-container {
+    border: 3px solid deeppink;
+}
+
+.generic-node-container .collapse-button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.generic-node-container .expand-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}

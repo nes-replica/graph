@@ -27,6 +27,7 @@ const NODE_DATA_SCHEMAS: Record<NodeDataTypeKeys, ZodType<NodeDataTypeValues>> =
   }),
   'commandPrompt': z.object({command: z.string()}),
   'script': z.object({language: z.literal('javascript'), name: z.string(), script: z.string()}),
+  'generic': z.object({content: z.any()})
 }
 
 const NODE_TYPE_SCHEMA: ZodType<NodeDataTypeKeys> =
@@ -99,7 +100,7 @@ export function buildGraphApi(
                       position: XYPosition) => {
     const validatedType = NODE_TYPE_SCHEMA.safeParse(type);
     if (!validatedType.success) {
-      window.alert(`Node type: '${type}' is not valid.\nExpected: 'markdown', 'picture', 'commandPrompt' or 'script'`);
+      window.alert(`Node type: '${type}' is not valid.\nExpected: 'markdown', 'picture', 'commandPrompt', 'generic' or 'script'`);
       return;
     }
     const validatedData = validateData(validatedType.data, data);

@@ -31,6 +31,8 @@ import {graphEvents} from "./graphEvents";
 import {ScriptEditorModal} from "./script/editor/ScriptEditorModal";
 import {MakeConnectable} from "./connectable-trait/connectable";
 import {buildGraphApi, buildReflectionApi, GraphApi, ReflectionApi} from "../reflectionApi/ReflectionApi";
+import {GenericData, GenericNode} from "./generic/GenericNode";
+import {GenericEditorModal} from "./generic/GenericNodeModal";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -38,6 +40,10 @@ interface MdNodeEditorState {
 
 interface ScriptNodeEditorState {
   node?: Node<ScriptData>;
+}
+
+interface GenericNodeEditorState {
+  node?: Node<GenericData>;
 }
 
 interface ContextMenuState {
@@ -89,11 +95,13 @@ function InternalGraph({graphStorage}: GraphProps) {
 
   const [mdEditor, setMdEditor] = useState<MdNodeEditorState>({});
   const [scriptEditor, setScriptEditor] = useState<ScriptNodeEditorState>({});
+  const [genericEditor, setGenericEditor] = useState<GenericNodeEditorState>({});
 
   function onNodeDoubleClick(event: ReactMouseEvent, node: Node) {
     switch (node.type) {
       case 'markdown': setMdEditor({node: node}); break;
       case 'script': setScriptEditor({node: node}); break;
+      case 'generic': setGenericEditor({node: node}); break;
     }
   }
 
@@ -129,6 +137,23 @@ function InternalGraph({graphStorage}: GraphProps) {
 
   function onCancelScriptEditor() {
     setScriptEditor({});
+  }
+
+  function onSaveGenericEditor(newGenericData: GenericData) {
+    if (genericEditor.node) {
+      dispatchGraphAction({
+        type: 'update',
+        newData: newGenericData,
+        nodeId: genericEditor.node?.id
+      })
+      setGenericEditor({});
+    } else {
+      console.warn("WARN impossible state: onSaveGenericEditor called without node set")
+    }
+  }
+
+  function onCancelGenericEditor() {
+    setGenericEditor({});
   }
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[], event: DropEvent) => {
@@ -197,6 +222,7 @@ function InternalGraph({graphStorage}: GraphProps) {
       commandPrompt: MakeConnectable(CommandPromptNodeInteractive),
       picture: MakeConnectable(PictureNodeResizable),
       script: MakeConnectable(ScriptNodeReflecting),
+      generic: MakeConnectable(GenericNode)
     }
   }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
 
@@ -212,6 +238,10 @@ function InternalGraph({graphStorage}: GraphProps) {
         name: 'untitled script',
         script: '',
       }, project({x: contextMenuState.x, y: contextMenuState.y})));
+    },
+    'Generic node': () => {
+      if (!contextMenuState) return;
+      dispatchGraphAction(graphEvents.createGenericNode(project({x: contextMenuState.x, y: contextMenuState.y})));
     },
   }), [project, contextMenuState])
 
@@ -231,20 +261,8 @@ function InternalGraph({graphStorage}: GraphProps) {
         nodeTypes={nodeTypes}
         fitView={true}
         onNodeDoubleClick={onNodeDoubleClick}
-        onClick={() => {
-          setContextMenuState(undefined);
-        }}
-        onDoubleClickCapture={event => {
-          setContextMenuState(undefined);
-          if (reactFlowRef.current && event.target instanceof Element) {
-            const targetIsPane = event.target.classList.contains('react-flow__pane');
-            if (targetIsPane) {
-              const {top, left} = reactFlowRef.current.getBoundingClientRect();
-              const position = project({x: event.clientX - left, y: event.clientY - top});
-              dispatchGraphAction(graphEvents.createMarkdownNode(position))
-            }
-          }
-        }}
+        onClick={() => setContextMenuState(undefined)}
+        onDoubleClickCapture={() => setContextMenuState(undefined)}
         onContextMenu={event => {
           if (reactFlowRef.current && event.target instanceof Element) {
             const targetIsPane = event.target.classList.contains('react-flow__pane');
@@ -282,6 +300,11 @@ function InternalGraph({graphStorage}: GraphProps) {
       {
         scriptEditor.node && <ScriptEditorModal scriptData={scriptEditor.node.data}
                                                 onSave={onSaveScriptEditor} onCancel={onCancelScriptEditor}
+                                                isOpen={true}/>
+      }
+      {
+        genericEditor.node && <GenericEditorModal genericData={genericEditor.node.data}
+                                                onSave={onSaveGenericEditor} onCancel={onCancelGenericEditor}
                                                 isOpen={true}/>
       }
     </>
