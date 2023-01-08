@@ -221,7 +221,15 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
     case 'rfEdgeChange':
       return {...state, edges: applyEdgeChanges(action.changes, state.edges)};
     case 'rfConnect':
-      if (action.connection.source === null || action.connection.sourceHandle === null || action.connection.target === null || action.connection.targetHandle === null) return state
+      if (action.connection.source === null || action.connection.sourceHandle === null ||
+          action.connection.target === null || action.connection.targetHandle === null) {
+        return state;
+      }
+      // check if source and target are not the same
+      if (action.connection.source === action.connection.target) {
+        // TODO dispatch error message
+        return state;
+      }
 
       const [sourcePosition, , rawSourceNumber] = action.connection.sourceHandle.split('-')
       const [targetPosition, , rawTargetNumber] = action.connection.targetHandle.split('-')
@@ -277,6 +285,7 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       return {...state, draggingEdgeNow: false, edges: updateEdge(action.oldEdge, action.newConnection, state.edges)};
     case 'rfEdgeUpdateEnd':
       if (state.draggingEdgeNow) {
+        // deleting edge if it was dropped in void
         return {...state, draggingEdgeNow: false, edges: state.edges.filter(edge => edge.id !== action.edge.id)}
       } else {
         return state;
