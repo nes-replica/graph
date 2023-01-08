@@ -1,5 +1,5 @@
 import {GraphStateAction, NodeDataTypeKeys, NodeDataTypeValues} from "./graphState";
-import {XYPosition} from "react-flow-renderer";
+import {XYPosition} from "reactflow";
 
 export const graphEvents = {
   createNode(type: NodeDataTypeKeys, data: NodeDataTypeValues, position: XYPosition): GraphStateAction {
@@ -19,5 +19,13 @@ export const graphEvents = {
 
   createGenericNode(position: XYPosition): GraphStateAction {
     return this.createNode('generic', {}, position)
+  },
+
+  updateEdgeLabel(id: string, newLabel: string): GraphStateAction {
+    return {
+      type: 'edgeLabelUpdate',
+      edgeId: id,
+      newLabel: newLabel,
+    }
   },
 };

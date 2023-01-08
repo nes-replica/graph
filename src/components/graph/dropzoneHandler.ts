@@ -1,5 +1,5 @@
 import {PictureUploadAction} from "./graphState";
-import {XYPosition} from "react-flow-renderer";
+import {XYPosition} from "reactflow";
 
 export function handleDropzoneFile(file: File, position: XYPosition, dispatch: (action: PictureUploadAction) => void) {
   dispatch({

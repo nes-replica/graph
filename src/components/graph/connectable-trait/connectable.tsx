@@ -1,5 +1,5 @@
 import {ConnectionPosition, NodeHandle, WithHandles} from "../graphState";
-import {Handle, Position, useUpdateNodeInternals} from "react-flow-renderer";
+import {Handle, Position, useStore, useUpdateNodeInternals} from "reactflow";
 import {useEffect} from "react";
 import "./style.css";
 import {CustomNodeProps} from "~/components/graph/customNodeProps";
@@ -38,7 +38,16 @@ function makeHandle(id: string, position: ConnectionPosition, indexInRow: number
   />
 }
 
-function makeHandles(handles: NodeHandle[]) {
+function makeEasyHandle(id: string, isTarget: boolean) {
+  return <Handle
+    key={id} id={id}
+    type="source"
+    position={Position.Top}
+    className={'new-handle easy' + (isTarget ? ' target' : '')}
+  />
+}
+
+function makeHandles(handles: NodeHandle[], isTarget: boolean) {
   const topHandleRow = handles.filter(h => h.position === 'top');
   const topHandleRowRendered = topHandleRow.map((handle, index) => {
     return makeHandle(handle.id, handle.position, index, topHandleRow.length);
@@ -59,7 +68,11 @@ function makeHandles(handles: NodeHandle[]) {
     return makeHandle(handle.id, handle.position, index, rightHandleRow.length);
   })
 
-  return [...topHandleRowRendered, ...bottomHandleRowRendered, ...leftHandleRowRendered, ...rightHandleRowRendered]
+  return [
+    ...topHandleRowRendered, ...bottomHandleRowRendered,
+    ...leftHandleRowRendered, ...rightHandleRowRendered,
+    makeEasyHandle('easy', isTarget)
+  ]
 }
 
 type UnderlyingConstructor<Props> = (props: CustomNodeProps<Props>) => JSX.Element;
@@ -69,6 +82,7 @@ export function MakeConnectable<Props, PropsConn extends Props & WithHandles>(un
   function ConnectableNode(props: CustomNodeProps<PropsConn>) {
     const {id, data: {nodeHandles}} = props;
     const updateNodeInternals = useUpdateNodeInternals();
+    const isTarget = useStore(state => !!(state.connectionNodeId && state.connectionNodeId !== id));
 
     useEffect(() => {
       updateNodeInternals(id);
@@ -76,7 +90,7 @@ export function MakeConnectable<Props, PropsConn extends Props & WithHandles>(un
 
     return <>
       {underlying(props)}
-      {makeHandles(nodeHandles)}
+      {makeHandles(nodeHandles, isTarget)}
     </>
   }
 

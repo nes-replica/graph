@@ -7,11 +7,11 @@ import {
   EdgeChange,
   MarkerType,
   Node,
+  NodeChange,
   updateEdge,
   XYPosition
-} from "react-flow-renderer";
+} from "reactflow";
 import {MarkdownData} from "./markdown/markdown-node/MarkdownNode";
-import {NodeChange} from "react-flow-renderer/dist/esm/types/changes";
 import {Graph} from "./graphStorage";
 import {CommandNodeData} from "./command-prompt/CommandPromptNode";
 import {PictureData} from "./picture/PictureNode";
@@ -40,6 +40,12 @@ interface UpdateNodeWithCallback {
   type: "updateCb";
   nodeId: string;
   updateFunc: (data: any) => any;
+}
+
+interface UpdateEdgeLabel {
+  type: "edgeLabelUpdate";
+  edgeId: string;
+  newLabel: string;
 }
 
 interface RFNodeChange {
@@ -135,7 +141,7 @@ export type PictureUploadAction = PictureUploadStart | PictureUploadProgress | P
 
 export type GraphStateAction =
   UpdateNodeData | UpdateNodeWithCallback | RFNodeChange | RFEdgeChange | RFConnect | RFEdgeUpdate | RFEdgeUpdateStart |
-  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed | PictureUploadAction;
+  RFEdgeUpdateEnd | RFPaneDoubleClick | CreateNode | LoadingSucceed | LoadingFailed | PictureUploadAction | UpdateEdgeLabel;
 
 function isConnectionPosition(value: string): value is ConnectionPosition {
   return ['top', 'bottom', 'left', 'right'].includes(value);
@@ -215,7 +221,31 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
     case 'rfEdgeChange':
       return {...state, edges: applyEdgeChanges(action.changes, state.edges)};
     case 'rfConnect':
-      if (action.connection.source === null || action.connection.sourceHandle === null || action.connection.target === null || action.connection.targetHandle === null) return state
+      if (action.connection.source === null || action.connection.sourceHandle === null ||
+          action.connection.target === null || action.connection.targetHandle === null) {
+        return state;
+      }
+      // check if source and target are not the same
+      if (action.connection.source === action.connection.target) {
+        // TODO dispatch error message
+        return state;
+      }
+
+      if (action.connection.targetHandle === 'easy') {
+        const sourceNode = state.nodes.find(node => node.id === action.connection.source);
+        const targetNode = state.nodes.find(node => node.id === action.connection.target);
+        if (!sourceNode || !targetNode) {
+          return state;
+        } else {
+          const xDiff = sourceNode.position.x - targetNode.position.x;
+          const yDiff = sourceNode.position.y - targetNode.position.y;
+          if (Math.abs(xDiff) > Math.abs(yDiff)) {
+            action.connection.targetHandle = xDiff < 0 ? 'left-handle-0' : 'right-handle-0';
+          } else {
+            action.connection.targetHandle = yDiff < 0 ? 'top-handle-0' : 'bottom-handle-0';
+          }
+        }
+      }
 
       const [sourcePosition, , rawSourceNumber] = action.connection.sourceHandle.split('-')
       const [targetPosition, , rawTargetNumber] = action.connection.targetHandle.split('-')
@@ -255,12 +285,23 @@ export function graphStateReduce(state: GraphState, action: GraphStateAction): G
       }
 
       return {...state, nodes: updatedNodes, edges: addEdge(edge, state.edges)};
+    case 'edgeLabelUpdate':
+      const newEdges = state.edges.map(edge => {
+        if (edge.id === action.edgeId) {
+          const newEdge = {...edge, label: action.newLabel};
+          console.log("found it", edge, newEdge, action.newLabel);
+          return newEdge
+        }
+        return edge;
+      });
+      return {...state, edges: newEdges};
     case 'rfEdgeUpdateStart':
       return {...state, draggingEdgeNow: true};
     case 'rfEdgeUpdate':
       return {...state, draggingEdgeNow: false, edges: updateEdge(action.oldEdge, action.newConnection, state.edges)};
     case 'rfEdgeUpdateEnd':
       if (state.draggingEdgeNow) {
+        // deleting edge if it was dropped in void
         return {...state, draggingEdgeNow: false, edges: state.edges.filter(edge => edge.id !== action.edge.id)}
       } else {
         return state;

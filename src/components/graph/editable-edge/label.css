@@ -1,0 +1,24 @@
+.react-flow__edgelabel-renderer .label {
+    position: absolute;
+    background: #227946;
+    color: #fff;
+    font-family: monospace;
+    padding: 7px;
+    border-radius: 5px;
+    font-size: .7em;
+    font-weight: 700;
+    pointer-events: all;
+    cursor: pointer;
+}
+
+.react-flow__edgelabel-renderer .label.selected {
+    background: #46c97c;
+    border: 2px solid #15462b;
+}
+
+.react-flow__edgelabel-renderer .input {
+    position: absolute;
+    pointer-events: all;
+    z-index: 100;
+    font-family: 'monospace';
+}

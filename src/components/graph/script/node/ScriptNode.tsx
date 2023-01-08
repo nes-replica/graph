@@ -130,7 +130,9 @@ export function ScriptNode({
     <div className={"header-row"}>
       <div className={"name"}>{name}</div>
       <div className={"actions"}>
-        <button onClick={executeScript}>{lastRunMillis ? 'reRUN' : 'RUN'}</button>
+        <button onClick={executeScript}
+                onDoubleClick={(e) => e.stopPropagation()}
+                >{lastRunMillis ? 'reRUN' : 'RUN'}</button>
       </div>
     </div>
     {lastRunMillis && <div className={"last-run"}>Last run: {lastRun}</div>}
