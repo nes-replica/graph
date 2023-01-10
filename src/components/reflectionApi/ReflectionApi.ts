@@ -27,7 +27,8 @@ const NODE_DATA_SCHEMAS: Record<NodeDataTypeKeys, ZodType<NodeDataTypeValues>> =
   }),
   'commandPrompt': z.object({command: z.string()}),
   'script': z.object({language: z.literal('javascript'), name: z.string(), script: z.string()}),
-  'generic': z.object({content: z.any()})
+  'generic': z.object({content: z.any()}),
+  'chart': z.object({data: z.array(z.object({x: z.number(), y: z.number()}))}),
 }
 
 const NODE_TYPE_SCHEMA: ZodType<NodeDataTypeKeys> =

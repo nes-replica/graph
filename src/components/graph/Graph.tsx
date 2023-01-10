@@ -34,6 +34,7 @@ import {GenericData, GenericNode} from "./generic/GenericNode";
 import {GenericEditorModal} from "./generic/GenericNodeModal";
 import 'reactflow/dist/style.css';
 import {EditableEdge} from "./editable-edge/EditableEdge";
+import {ChartNode} from "./chart/ChartNode";
 
 interface MdNodeEditorState {
   node?: Node<MarkdownData>;
@@ -223,7 +224,8 @@ function InternalGraph({graphStorage}: GraphProps) {
       commandPrompt: MakeConnectable(CommandPromptNodeInteractive),
       picture: MakeConnectable(PictureNodeResizable),
       script: MakeConnectable(ScriptNodeReflecting),
-      generic: MakeConnectable(GenericNode)
+      generic: MakeConnectable(GenericNode),
+      chart: MakeConnectable(ChartNode),
     }
   }, [CommandPromptNodeInteractive, ScriptNodeReflecting])
 
@@ -265,6 +267,10 @@ function InternalGraph({graphStorage}: GraphProps) {
       if (!contextMenuState) return;
       dispatchGraphAction(graphEvents.createGenericNode(project({x: contextMenuState.x, y: contextMenuState.y})));
     },
+    'Chart node': () => {
+      if (!contextMenuState) return;
+      dispatchGraphAction(graphEvents.createChartNode(project({x: contextMenuState.x, y: contextMenuState.y})));
+    }
   }), [project, contextMenuState])
 
   const cancelInteractions = useCallback(() => {

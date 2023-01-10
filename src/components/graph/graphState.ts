@@ -17,6 +17,7 @@ import {CommandNodeData} from "./command-prompt/CommandPromptNode";
 import {PictureData} from "./picture/PictureNode";
 import {ScriptData} from "./script/node/ScriptNode";
 import {GenericData} from "~/components/graph/generic/GenericNode";
+import {ChartData} from "~/components/graph/chart/ChartNode";
 
 export interface GraphState {
   nodes: Node<NodeDataTypeValues & WithHandles>[];
@@ -88,7 +89,8 @@ type NodeDataTypes = {
   'picture': PictureData,
   'commandPrompt': CommandNodeData,
   'script': ScriptData,
-  'generic': GenericData
+  'generic': GenericData,
+  'chart': ChartData,
 }
 
 export interface WithHandles {

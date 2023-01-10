@@ -1,0 +1,8 @@
+.chart-node {
+  border: 1px solid #7b8eec;
+  border-radius: 5px;
+}
+
+.selected .chart-node {
+  border: 3px solid #576fea;
+}

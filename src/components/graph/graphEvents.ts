@@ -21,6 +21,10 @@ export const graphEvents = {
     return this.createNode('generic', {}, position)
   },
 
+  createChartNode(position: XYPosition): GraphStateAction {
+    return this.createNode('chart', {}, position)
+  },
+
   updateEdgeLabel(id: string, newLabel: string): GraphStateAction {
     return {
       type: 'edgeLabelUpdate',
